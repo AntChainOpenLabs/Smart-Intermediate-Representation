@@ -481,7 +481,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 match &func_name.kind {
                     crate::ir::interface_type::PartialFuncNameKind::UserDefFunc(name) => {
                         let function_name = self.get_internal_function_name(
-                            name,
+                            name.as_str(),
                             params_ty.as_slice(),
                             ret_ty,
                             false,
