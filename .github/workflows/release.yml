@@ -1,14 +1,8 @@
 name: Release
 on:
   push:
-    branches:
-      - '*'
-  pull_request:
-    branches:
-      - '*'
-  # push: todo fix
-  #   tags:
-  #     - "v*"
+    tags:
+      - "v*"
 permissions:
   contents: write
 jobs:
@@ -65,7 +59,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          push: true # ${{ github.event_name != 'pull_request' }}
-          tags: smartir/smartir:v0.1.0 # ${{ steps.meta.outputs.tags }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
