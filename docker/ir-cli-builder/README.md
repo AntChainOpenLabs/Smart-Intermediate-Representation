@@ -15,6 +15,8 @@ docker run --platform linux/x86_64 -v ${path-to-Smart-Intermediate-Representatio
 
 # 3. code, build, test in your container:
 cd /home/Smart-Intermediate-Representation-project
+# set up default rustup version
+rustup default 1.67
 make install-rustc-wasm
 make run-debug
 ```
