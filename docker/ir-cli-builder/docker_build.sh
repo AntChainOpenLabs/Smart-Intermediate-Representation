@@ -27,7 +27,7 @@ else
   # 2. docker build
   # for macOS Arm64 environment, it's required to add the `--platform linux/amd64` option to the docker build/run commands.
   cd docker/ir-cli-builder
-  docker build . --platform linux/x86_64 -f Dockerfile -t smartir/smart-ir-builder:v0.1.0
+  docker build . --platform linux/x86_64 -f Dockerfile -t smartir/smart-ir-builder:latest
   cd ../../
 
   # 3. clean tmp files
