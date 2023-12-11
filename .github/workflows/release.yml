@@ -1,0 +1,53 @@
+name: Release
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+  # push: todo fix
+  #   tags:
+  #     - "v*"
+permissions:
+  contents: write
+jobs:
+  Publish: # Pack and publish image to Docker Hub and Github Release
+    runs-on: ubuntu-latest
+    container:
+      image: smartir/smart-ir-builder:v0.1.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Build the Release
+        working-directory: ir_cli 
+        run: |
+          rustup default 1.67 # verify problem
+          make release
+          ls ./ # todo remove test
+          ls ./_build # todo remove test
+          ls ./_build/sir
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Extract Metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: smartir/smartir
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true # ${{ github.event_name != 'pull_request' }}
+          tags: v0.1.0 # ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Upload Artifact to Github Releases
+        uses: actions/upload-artifact@v3
+        with:
+          name: ir-linux-amd64-nightly
+          path: ir.tgz
