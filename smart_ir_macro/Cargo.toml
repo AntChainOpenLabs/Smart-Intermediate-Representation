@@ -1,0 +1,13 @@
+[package]
+name = "smart_ir_macro"
+version = "0.3.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+path = "src/lib.rs"
+
+[dependencies]
+proc-macro2 = "1.0.52"
+syn = {version = "2.0.4", default-features = false, features = ["derive", "parsing", "printing", "clone-impls"]}
+quote = "1.0.26"

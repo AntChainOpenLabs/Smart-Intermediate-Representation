@@ -1,0 +1,214 @@
+
+use regex::Regex;
+use crate::ir::frontend;
+
+grammar;
+
+pub Mod: Box<frontend::Module> = {
+    "module_name" "=" <name:Text> <defs:Defs> => Box::new(frontend::Module{
+        name: name,
+        defs: defs,
+    }),
+}
+
+Defs:  Box<frontend::Defs> = {
+        => Box::new(frontend::Defs::None),
+    Def Defs => Box::new(frontend::Defs::Some(<>)), 
+}
+
+Def: Box<frontend::Def> = {
+    TypeDef =>  Box::new(frontend::Def::TypeDef(<>)),
+    FuncDef => Box::new(frontend::Def::FuncDef(<>)),
+    ContDef => Box::new(frontend::Def::ContDef(<>)),
+    MDDef => Box::new(frontend::Def::MDDef(<>)),
+}
+
+TypeDef: Box<frontend::TypeDef> = {
+    "type" <name:Name> "="  "{" <fields:Fields>  "}"  <metadatas: MetaDatas> => Box::new(frontend::TypeDef::Compound(name, fields, metadatas)),
+    "type" <name:Name> "="  <ty:Type> <metadatas: MetaDatas> => Box::new(frontend::TypeDef::Alias(name, ty, metadatas)),
+}
+
+Fields: Box<frontend::Fields> = {
+        => Box::new(frontend::Fields::None),
+    <field:Field> "," <fields:Fields> => Box::new(frontend::Fields::Some(field, fields)),
+}
+
+Field: Box<frontend::Field> = {
+    <name:Name> ":" <ty:Type> => Box::new(frontend::Field {
+        name: name,
+        ty: ty,
+    }),
+}
+
+Visibility: frontend::Visibility = {
+        => frontend::Visibility::Private,
+    "pub" => frontend::Visibility::Public,
+}
+
+Type: Box<frontend::Type> = {
+    "i8" => Box::new(frontend::Type::Int(frontend::IntType::I8)),
+    "i16" => Box::new(frontend::Type::Int(frontend::IntType::I16)),
+    "i32" => Box::new(frontend::Type::Int(frontend::IntType::I32)),
+    "i64" => Box::new(frontend::Type::Int(frontend::IntType::I64)),
+    "i128" => Box::new(frontend::Type::Int(frontend::IntType::I128)),
+    "u8" => Box::new(frontend::Type::Int(frontend::IntType::U8)),
+    "u16" => Box::new(frontend::Type::Int(frontend::IntType::U16)),
+    "u32" => Box::new(frontend::Type::Int(frontend::IntType::U32)),
+    "u64" => Box::new(frontend::Type::Int(frontend::IntType::U64)),
+    "u128" => Box::new(frontend::Type::Int(frontend::IntType::U128)),
+    "str" =>  Box::new(frontend::Type::Str),
+    "bool" => Box::new(frontend::Type::Bool),
+    "void" => Box::new(frontend::Type::Void),
+    "[" <ty:Type> "]" => Box::new(frontend::Type::Array(ty, None)),
+    "[" <ty:Type> ";" <num:Num> "]" => Box::new(frontend::Type::Array(ty, Some(num))),
+    "{" <key:Type> ":" <value:Type> "}" => Box::new(frontend::Type::Map(key, value)),
+    <ty:Type> "*" => Box::new(frontend::Type::Pointer(ty)),
+    "%" <name:Name> => Box::new(frontend::Type::Named(name)),
+}
+
+MetaDatas: Box<frontend::MetaDatas> = {
+        => Box::new(frontend::MetaDatas::None),
+    MetaData MetaDatas => Box::new(frontend::MetaDatas::Some(<>)), 
+}
+
+MetaData: Box<frontend::MetaData> = {
+    "!" <name:Name> "!" <id:Num> => Box::new(frontend::MetaData {
+        name: name,
+        id: id,
+    }) 
+}
+
+MDDef: Box<frontend::MDDef> = {
+    "meta" "!" <id:Num> "="  "!{" <data:MDFields> "}" => Box::new(frontend::MDDef {
+        id: id,
+        data: data
+    })
+}
+
+MDFields: Box<frontend::MDFields> = {
+        => Box::new(frontend::MDFields::None),
+    <field:MDField> "," <fields:MDFields>  => Box::new(frontend::MDFields::Some(field, fields)),
+}
+
+MDField: Box<frontend::MDField> = {
+    <minus:Minus> <val:Num> ":" <ty:Type> => Box::new(frontend::MDField::Int(Box::new(frontend::IntValue{
+        val: val,
+        ty: ty,
+        positive: minus,
+    }))),
+    <text:Text> ":" "str" => Box::new(frontend::MDField::Str(text)),
+    "true" ":" "bool" => Box::new(frontend::MDField::Bool(true)),
+    "false" ":" "bool" => Box::new(frontend::MDField::Bool(false)),
+}
+
+
+Minus: bool = {
+        => true,
+    "-" => false,
+}
+
+ContDef: Box<frontend::ContDef> = {
+    "contract" <name:Name> "{" <states:States> <funcs:Defs> "}" => Box::new(frontend::ContDef {
+        name: name,
+        states: states,
+        funcs: funcs,
+    }),
+}
+
+States: Box<frontend::Fields> = {
+        => Box::new(frontend::Fields::None),
+    "state" "{" <fields:Fields> "}" => fields,
+}
+
+FuncDef: Box<frontend::FuncDef> = {
+    <vis:Visibility> "fn" <name:Name> "(" <params:Params> ")"  <ret:RetType>  <metadatas: MetaDatas> "{" <bbs:BasicBlocks> "}"  => Box::new(frontend::FuncDef {
+        name: name,
+        params: params,
+        vis: vis,
+        ret: ret,
+        metadatas: metadatas,
+        basic_blocks: bbs,
+    }),
+}
+
+Params: Box<frontend::Params> = {
+    => Box::new(frontend::Params::None),
+   <param:Param> "," <params:Params> => Box::new(frontend::Params::Some(param,params)),
+}
+
+Param: Box<frontend::Param> = {
+   "%" <id:Num> ":" <ty:Type> => Box::new(frontend::Param {
+       id: id,
+       ty: ty,
+   }),
+}
+
+BasicBlocks: Box<frontend::BasicBlocks> = {
+        => Box::new(frontend::BasicBlocks::None),
+    <bb:BasicBlock>  <bbs:BasicBlocks> => Box::new(frontend::BasicBlocks::Some(bb,bbs)),
+}
+
+BasicBlock: Box<frontend::BasicBlock> = {
+    <num:Num> ":" <instrs:Instrs> => Box::new(frontend::BasicBlock {
+        id: num,
+        instrs: instrs,
+    }),
+}
+
+Instrs: Box<frontend::Instrs> = {
+        => Box::new(frontend::Instrs::None),
+    <instr:Instr>  <instrs:Instrs> => Box::new(frontend::Instrs::Some(instr,instrs)),
+}
+
+Instr: Box<frontend::Instr> = {
+    "let" "%" <id:Num> ":" <ty:Type> <metadatas: MetaDatas> "=" <expr:Expr>  => Box::new(frontend::Instr::Declaration(id, Some(expr), ty, metadatas)),
+    "%" <id:Num> <metadatas: MetaDatas> "=" <expr:Expr> => Box::new(frontend::Instr::Assignment(id, expr, metadatas)),
+    <instr:SimpleInstr> => Box::new(frontend::Instr::Simple(instr)),
+}
+
+RetType: Box<frontend::Type> = {
+        => Box::new(frontend::Type::Void),
+    "->" <ty:Type> => ty,
+}
+
+SimpleInstr: Box<frontend::SimpleInstr> = {
+    <name:Name> "(" <exprs:Exprs> ")" <ret:RetType>  <metadatas: MetaDatas> => Box::new(frontend::SimpleInstr {
+        name: name,
+        args: exprs,
+        ret: ret,
+        metadatas: metadatas
+    }),
+}
+
+Exprs: Box<frontend::Exprs> = {
+        => Box::new(frontend::Exprs::None),
+    <expr:Expr> "," <exprs:Exprs> => Box::new(frontend::Exprs::Some(expr, exprs)),
+}
+
+Expr: Box<frontend::Expr> = {
+    SimpleInstr => Box::new(frontend::Expr::Instr(<>)),
+    "bb" <id:Num> => Box::new(frontend::Expr::Label(id)),
+    "%" <id:Num> ":" <ty:Type> => Box::new(frontend::Expr::Ident(id,ty)),
+    <ty:Type> => Box::new(frontend::Expr::Type(ty)),
+    "@" <name:Name> "(" <exprs:Exprs> ")" <ret:RetType> => Box::new(frontend::Expr::Invoke(name,exprs)),
+    <minus:Minus> <val:Num> ":" <ty:Type> => Box::new(frontend::Expr::Int(Box::new(frontend::IntValue{
+        val: val,
+        ty: ty,
+        positive: minus,
+    }))),
+    <text:Text> ":" "str" => Box::new(frontend::Expr::Str(text)),
+    "true" ":" "bool" => Box::new(frontend::Expr::Bool(true)),
+    "false" ":" "bool" => Box::new(frontend::Expr::Bool(false)),
+}
+
+
+
+Num: u128 = <s:r"[0-9]+"> => u128::from_str_radix(s, 10).unwrap();
+Text: String = <s:r#""((\\("|\\|n|t|(x[0-9A-F][0-9A-F])|(u\{[0-9A-F][0-9A-F][0-9A-F][0-9A-F]\})|[ \n\t\r\f]+\\))|[^"\n\\])*""#> => {
+    let escape_ignore_reg = Regex::new("\\\\[ \\n\\t\\r\\f]+\\\\").unwrap();
+    let mut s = String::from(escape_ignore_reg.replace(s, ""));
+    s.remove(0);
+    s.pop();
+    frontend::unescape::unescape_str_wrap_error(s.as_str())
+};
+Name: String = <s:r"[a-zA-Z][a-zA-Z_0-9.]*"> => String::from(s);

@@ -1,0 +1,54 @@
+[package]
+name = "smart_ir"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+path = "src/lib.rs"
+
+[build-dependencies]
+lalrpop = "0.19.9"
+cc = "1.0"
+
+[dependencies]
+indexmap = "1.0"
+lalrpop-util = { version = "0.20.0", features = ["lexer"] }
+downcast-rs = "1.2.0"
+smart_ir_macro = { path = "../smart_ir_macro", version = "0.3.0" }
+inkwell = { git = "https://github.com/TheDan64/inkwell", rev = "bbe1f3d76c45fc137a125665861fc6382ab352d6", features = [
+    "target-webassembly",
+    "llvm14-0-force-static",
+] }
+num-bigint = "0.4"
+num-integer = "0.1.45"
+num-traits = "0.2.8"
+num-derive = "0.3"
+regex = "1.6.0"
+eth2_ssz = "0.4.0"
+eth2_ssz_derive = "0.3.0"
+rustc-serialize = "0.3.24"
+parity-wasm = "0.42.2"
+wasmi = "0.11"
+tempfile = "3.3"
+rand = "0.7"
+home = "0.5.4"
+once_cell = "1.10"
+byteorder = "1.4.3"
+compiler_base_span = "0.0.1"
+compiler_base_session = "0.0.11"
+compiler_base_parallel = "0.0.2"
+compiler_base_error = "0.0.8"
+nano-leb128 = "0.1.0"
+rust-crypto = "^0.2"
+rsa = "0.3.0"
+keccak-hash = "0.10.0"
+libsecp256k1 = "0.7.1"
+libc = { version = "0.2.121" }
+bstr = "0.2.16"
+anyhow = "1.0"
+hex = "0.4.3"
+
+[features]
+ir_release = [] # feature has no explicit dependencies
