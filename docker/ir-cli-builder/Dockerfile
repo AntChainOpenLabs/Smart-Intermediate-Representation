@@ -91,8 +91,8 @@ WORKDIR /tmp/cargo_dep
 COPY cargo_config /tmp/cargo_config
 RUN cp -rf /tmp/cargo_config ~/.cargo/config
 
-COPY demo_to_download_deps.Cargo.toml /tmp/cargo_dep/Cargo.toml
-RUN cargo update
+COPY Cargo.toml /tmp/cargo_dep/Cargo.toml
+# RUN cargo update
 
 # RUN rustup component add llvm-tools-preview
 RUN cargo install cargo-llvm-cov
