@@ -907,6 +907,7 @@ pub fn build_mock_runtime(src: &str) -> (MockRuntime, IRContractABIMeta) {
         call_args: vec![],
         wasm_start_called: false,
     };
+    init_mock_runtime();
 
     (mock_runtime, ir_contract_abi_info)
 }
