@@ -14,7 +14,6 @@ mod context;
 use chrono::Local;
 #[allow(unused_imports)]
 use log::info;
-use std::borrow::Borrow;
 use std::fmt;
 use std::fs::File;
 use std::io::Write;
@@ -872,6 +871,7 @@ fn mock_compile(src: &str) -> IRContext {
 }
 pub fn build_mock_runtime(src: &str) -> (MockRuntime, IRContractABIMeta) {
     info!("build_mock_runtime at {:?}", Local::now());
+    init_mock_runtime();
     let ir_context = mock_compile(src);
     let abi_names = RefCell::new(Vec::new());
     let options = IROptions::default();
@@ -888,10 +888,10 @@ pub fn build_mock_runtime(src: &str) -> (MockRuntime, IRContractABIMeta) {
         }
     }
 
-    let mut mock_runtime = MockRuntime {
+    let mock_runtime = MockRuntime {
         contract_ir_meta: ir_contract_abi_info.clone(),
         accounts: HashMap::new(),
-        vm: VirtualMachine::new(emit_wasm_bytes.clone(), Address::from("me")),
+        vm: VirtualMachine::new(emit_wasm_bytes, Address::from("me")),
         store: HashMap::new(),
         events: vec![],
         caller: rand_address(),
@@ -907,7 +907,6 @@ pub fn build_mock_runtime(src: &str) -> (MockRuntime, IRContractABIMeta) {
         call_args: vec![],
         wasm_start_called: false,
     };
-    init_mock_runtime();
 
     (mock_runtime, ir_contract_abi_info)
 }
