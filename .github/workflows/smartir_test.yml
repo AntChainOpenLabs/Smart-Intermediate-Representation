@@ -1,0 +1,28 @@
+name: SmartIR Build and Test CI
+
+on: ["push", "pull_request"]
+
+jobs:
+  smartir-build-test:
+    name: Test
+    runs-on: ubuntu-latest
+    container:
+      image: smartir/smart-ir-builder:main
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          submodules: "false"
+      # Prerequisite
+      - name: Code format check
+        working-directory: ./ir_cli
+        run: |
+          rustup default 1.67
+          make fmt-check
+        shell: bash
+      - name: e2e tests
+        working-directory: ./ir_cli
+        shell: bash
+        run: |
+          rustup default 1.67
+          make test

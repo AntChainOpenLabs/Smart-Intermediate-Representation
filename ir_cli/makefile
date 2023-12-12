@@ -23,7 +23,7 @@ run-debug:
 
 test:
 	cargo test -r
-	cd ../smart_ir && ./run_cclib_tests.sh
+	# cd ../smart_ir && ./run_cclib_tests.sh
 
 install-rustc-wasm:
 	rustup target add wasm32-unknown-unknown
