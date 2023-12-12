@@ -388,17 +388,17 @@ impl Externals for MockRuntime {
                 };
                 self.events.push(event.clone());
 
-                // 如果 log name 是 MyCoverage, 则导出log内容
+                // If the log name is MyCoverage, export the log content.
                 let my_coverage_event_name = "MyCoverage";
                 let first_topic = event.topics[0].clone();
 
-                // 第一个字节是event字符串长度
+                // The first byte is the length of the event string.
                 if String::from_utf8(first_topic[1..].to_vec()).unwrap() == *my_coverage_event_name
                 {
                     let file_name = "out.mygcna";
                     let mut file =
                         File::create(file_name).expect("mygcna coverage file create failed");
-                    // desc_o 是datastream编码后的长度，头部需要读取leb128长度
+                    // `desc_o` is the length encoded by the data stream, and the header needs to read the length of leb128.
                     let coverage_file_bytes = match nano_leb128::SLEB128::read_from(&desc_o) {
                         Ok((_, len_bytes_len)) => &desc_o[len_bytes_len..],
                         Err(_) => unreachable!(
