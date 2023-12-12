@@ -7,6 +7,7 @@ use inkwell::values::{BasicValueEnum, FunctionValue};
 use smart_ir::integration::intrinsic::IrHostAPIIntrinsic;
 use smart_ir::ir::cfg::Type;
 use smart_ir::ir::interface_type::IntrinsicFuncName;
+use smart_ir::ir::intrinsic_func::initialize_intrinisic_func_names;
 use smart_ir::ir_codegen::common::global::ExtendContext;
 use smart_ir::ir_codegen::context::IR2LLVMCodeGenContext;
 
@@ -14,6 +15,7 @@ pub struct MockExtendContext {}
 
 impl MockExtendContext {
     pub fn new() -> Self {
+        initialize_intrinisic_func_names();
         MockExtendContext {}
     }
 }

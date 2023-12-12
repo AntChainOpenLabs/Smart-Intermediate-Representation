@@ -27,10 +27,12 @@ use rustc_serialize::hex::ToHex;
 use wasmi::*;
 
 use crate::abi::IRContractABIMeta;
+use crate::vm::context::MockExtendContext;
 use keccak_hash::keccak256;
 use smart_ir::integration::hostapi::HostAPI;
 use smart_ir::ir::context::IRContext;
 use smart_ir::ir::frontend::translate::translate_main_module;
+use smart_ir::ir_codegen::common::global::set_extend_context;
 use smart_ir::ir_config::IROptions;
 use smart_ir::runtime::vm::*;
 
@@ -63,6 +65,10 @@ pub struct MockRuntime {
     /// Cross contract call argument list bytes.
     pub call_args: Vec<Vec<u8>>,
     pub wasm_start_called: bool,
+}
+
+pub fn init_mock_runtime() {
+    set_extend_context(Box::new(MockExtendContext::new()));
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
