@@ -4,7 +4,7 @@
 
 use inkwell::values::IntValue;
 use inkwell::values::{BasicValueEnum, FunctionValue};
-use smart_ir::integration::intrinsic::IrHostapiIntrinsic;
+use smart_ir::integration::intrinsic::IrHostAPIIntrinsic;
 use smart_ir::ir::cfg::Type;
 use smart_ir::ir::interface_type::IntrinsicFuncName;
 use smart_ir::ir_codegen::common::global::ExtendContext;
@@ -149,21 +149,21 @@ impl ExtendContext for MockExtendContext {
         vec![]
     }
 
-    fn get_ir_func_intrinsics(&self) -> &[&IrHostapiIntrinsic] {
+    fn get_ir_func_intrinsics(&self) -> &[&IrHostAPIIntrinsic] {
         &[]
     }
 
     fn find_ir_func_intrinsic_by_func_name(
         &self,
         _func_name: &IntrinsicFuncName,
-    ) -> Option<&IrHostapiIntrinsic> {
+    ) -> Option<&IrHostAPIIntrinsic> {
         None
     }
 
     fn add_or_get_intrinsic_function<'ctx>(
         &self,
         _context: &IR2LLVMCodeGenContext<'ctx>,
-        _intrinsic_info: &IrHostapiIntrinsic,
+        _intrinsic_info: &IrHostAPIIntrinsic,
         _params: &[Type],
         _ret: &Type,
     ) -> FunctionValue<'ctx> {

@@ -1,6 +1,6 @@
 ## Introduction
 
-This crate introduces a default command line tool with pre-defined mock runtime(wasm runtime and HOSTAPI) of Smart Intermediate Representation.
+This crate introduces a default command line tool with pre-defined mock runtime(wasm runtime and HostAPI) of Smart Intermediate Representation.
 
 ## How to Use
 

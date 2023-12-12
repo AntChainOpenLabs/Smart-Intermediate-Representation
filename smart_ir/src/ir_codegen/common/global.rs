@@ -2,24 +2,24 @@
 // Copyright (c) The Smart Intermediate Representation Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::integration::intrinsic::IrHostapiIntrinsic;
+use crate::integration::intrinsic::IrHostAPIIntrinsic;
 use crate::ir::cfg::Type;
 use crate::ir::interface_type::IntrinsicFuncName;
 use crate::ir_codegen::context::IR2LLVMCodeGenContext;
 use inkwell::values::{BasicValueEnum, FunctionValue};
 
 pub trait ExtendContext {
-    fn get_ir_func_intrinsics(&self) -> &[&IrHostapiIntrinsic];
+    fn get_ir_func_intrinsics(&self) -> &[&IrHostAPIIntrinsic];
 
     fn find_ir_func_intrinsic_by_func_name(
         &self,
         func_name: &IntrinsicFuncName,
-    ) -> Option<&IrHostapiIntrinsic>;
+    ) -> Option<&IrHostAPIIntrinsic>;
 
     fn add_or_get_intrinsic_function<'ctx>(
         &self,
         context: &IR2LLVMCodeGenContext<'ctx>,
-        intrinsic_info: &IrHostapiIntrinsic,
+        intrinsic_info: &IrHostAPIIntrinsic,
         params_ty: &[Type],
         ret: &Type,
     ) -> FunctionValue<'ctx>;

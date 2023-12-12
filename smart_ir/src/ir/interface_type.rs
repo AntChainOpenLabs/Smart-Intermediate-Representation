@@ -19,13 +19,13 @@ impl PartialFuncNameBehavior for () {
 pub enum PartialFuncNameKind<T: PartialFuncNameBehavior, U: PartialFuncNameBehavior> {
     UserDefFunc(String),
     Intrinsic(T),
-    HOSTAPI(U),
+    HostAPI(U),
     Otherwise,
 }
 
-/// Specify the specification of HOSTAPI here
+/// Specify the specification of HostAPI here
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum DefaultHOSTAPI {}
+pub enum DefaultHostAPI {}
 
 /// Specify the specification of Intrinsic functions here
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -525,7 +525,7 @@ impl PartialFuncName {
         match &self.kind {
             PartialFuncNameKind::UserDefFunc(str) => str.clone(),
             PartialFuncNameKind::Intrinsic(intrinsic) => intrinsic.apply_name(),
-            PartialFuncNameKind::HOSTAPI(_) => unimplemented!(),
+            PartialFuncNameKind::HostAPI(_) => unimplemented!(),
             PartialFuncNameKind::Otherwise => unreachable!(),
         }
     }
