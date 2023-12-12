@@ -1,29 +1,29 @@
 ## Introduction
 
-This crate introduces a default command line tool with pre-defined mock runtime(wasm runtime and HostAPI) of Smart Intermediate Representation.
+This crate introduces a default command line tool with a pre-defined mock runtime (wasm runtime and Host APIs) of Smart Intermediate Representation.
 
 ## How to Use
 
 First, build the binary of `ir_cli`
 
 ```shell
-$cd ir_cli
-$make
+cd ir_cli
+make
 ```
 
-Then, there is an binary called `ir_cli` in the directory `target/debug`
+Then, there is a binary called `ir_cli` in the directory `target/debug`
 
-Second, build the wasm bytecode of textual IR file. For example:
+Second, build the wasm bytecode of the textual IR file. For example:
 
-```
-$./target/debug/ir_cli build examples/hello_world.ir
+```shell
+./target/debug/ir_cli build ../ir_example/hello_world.ir
 ```
 
 Third, run the bytecode in the pre-defined mock runtime environment:
 
-```
-$./target/debug/ir_cli run --func greeting a.out.wasm a.out.abi.json
-$./target/debug/ir_cli run --func greeting2 a.out.wasm a.out.abi.json [string]
+```shell
+./target/debug/ir_cli run --func greeting a.out.wasm a.out.abi.json
+./target/debug/ir_cli run --func greeting2 a.out.wasm a.out.abi.json [string]
 ```
 
 ### Demo
