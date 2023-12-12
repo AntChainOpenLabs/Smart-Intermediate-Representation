@@ -7,13 +7,13 @@ use crate::ir::cfg::Literal;
 use crate::ir::cfg::MetaData;
 use crate::ir::cfg::MetaDataNode;
 use crate::ir::context::IRContext;
-use smart_ir_macro::MetadataDefination;
+use smart_ir_macro::MetadataDefinition;
 
 /// debug location metadata
 /// !{ {line}: u64, {column}: u64, {file}: str}
 /// e.g.  %0 = add(1, 2) !ir_debug_location !0
 ///       !0 = !{2: u64, 5: u64, "/Users/admin/ir/test.ir": str}
-#[derive(Clone, Debug, PartialEq, Eq, MetadataDefination, Default)]
+#[derive(Clone, Debug, PartialEq, Eq, MetadataDefinition, Default)]
 #[MetaDataKey(ir_debug_location)]
 pub struct DebugLocation {
     start_line: u32,

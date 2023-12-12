@@ -46,7 +46,7 @@ where
     )
 }
 
-/// metadata defination dervie macro
+/// metadata definition derive macro
 /// attribute MetaDataKey must be set
 /// This macro will generate getters and setters for all fields of the struct,
 /// defining the conversion and registration of the struct to metadata
@@ -55,9 +55,9 @@ where
 ///
 /// ```rust
 /// use smart_ir::cfg::ir::{MetaData, IRContext, Literal, IntValue};
-/// use smart_ir_macro::{MetadataDefination, MetaDataKey};
+/// use smart_ir_macro::{MetadataDefinition, MetaDataKey};
 ///
-/// #[derive(MetadataDefination, PartialEq, Eq, Default)]
+/// #[derive(MetadataDefinition, PartialEq, Eq, Default)]
 /// #[MetaDataKey(smart_foo_bar)]
 /// struct FooBar {
 ///     foo: i32,
@@ -131,15 +131,15 @@ where
 /// }
 /// ```
 ///
-#[proc_macro_derive(MetadataDefination, attributes(MetaDataKey))]
-pub fn derive_md_defination(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+#[proc_macro_derive(MetadataDefinition, attributes(MetaDataKey))]
+pub fn derive_md_definition(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = proc_macro2::TokenStream::from(input);
 
-    let output = derive_md_defination_impl(input);
+    let output = derive_md_definition_impl(input);
     proc_macro::TokenStream::from(output)
 }
 
-fn derive_md_defination_impl(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+fn derive_md_definition_impl(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
     let ast: syn::DeriveInput = syn::parse2(input).unwrap();
 
     let struct_name = ast.ident;
@@ -154,7 +154,7 @@ fn derive_md_defination_impl(input: proc_macro2::TokenStream) -> proc_macro2::To
                 }
                 None => Err(syn::Error::new(
                     proc_macro2::Span::call_site(),
-                    "expand MetadataDefination failed: MetaDataKey isn't set",
+                    "expand MetadataDefinition failed: MetaDataKey isn't set",
                 )),
             })
             .unwrap();
@@ -183,7 +183,7 @@ fn derive_md_defination_impl(input: proc_macro2::TokenStream) -> proc_macro2::To
             });
             let meta_data_key = meta_data_key
                 .unwrap_or_else(|| {
-                    panic!("expand MetadataDefination failed: MetaDataKey isn't set")
+                    panic!("expand MetadataDefinition failed: MetaDataKey isn't set")
                 })
                 .to_string();
             let meta_data_key =
@@ -277,7 +277,7 @@ fn field_to_literal(ident: &proc_macro2::Ident, ty: &Type) -> proc_macro2::Token
                     panic!(
                         "{}",
                         format!(
-                        "MetadataDefination expand failed: unsupported field ty: {token_stream}"
+                        "MetadataDefinition expand failed: unsupported field ty: {token_stream}"
                     )
                     )
                 }
@@ -287,7 +287,7 @@ fn field_to_literal(ident: &proc_macro2::Ident, ty: &Type) -> proc_macro2::Token
             let token_stream = ty.to_token_stream();
             panic!(
                 "{}",
-                format!("MetadataDefination expand failed: unsupported field ty: {token_stream}",)
+                format!("MetadataDefinition expand failed: unsupported field ty: {token_stream}",)
             )
         }
     }
@@ -347,7 +347,7 @@ fn literal_to_field(
                     panic!(
                         "{}",
                         format!(
-                        "MetadataDefination expand failed: unsupported field ty: {token_stream}",
+                        "MetadataDefinition expand failed: unsupported field ty: {token_stream}",
                     )
                     )
                 }
@@ -358,7 +358,7 @@ fn literal_to_field(
             let token_stream = ty.to_token_stream();
             panic!(
                 "{}",
-                format!("MetadataDefination expand failed: unsupported field ty:  {token_stream}")
+                format!("MetadataDefinition expand failed: unsupported field ty:  {token_stream}")
             )
         }
     }

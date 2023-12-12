@@ -6,9 +6,9 @@ use crate::ir::cfg::Literal;
 use crate::ir::cfg::MetaData;
 use crate::ir::cfg::MetaDataNode;
 use crate::ir::context::IRContext;
-use smart_ir_macro::MetadataDefination;
+use smart_ir_macro::MetadataDefinition;
 
-#[derive(Clone, Debug, PartialEq, Eq, MetadataDefination, Default)]
+#[derive(Clone, Debug, PartialEq, Eq, MetadataDefinition, Default)]
 #[MetaDataKey(extend_hostapi)]
 pub struct ExtendHostAPI {
     name: String,

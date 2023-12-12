@@ -524,7 +524,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                             Ok(ret_val)
                         }
                     }
-                    crate::ir::interface_type::PartialFuncNameKind::HOSTAPI(_) => {
+                    crate::ir::interface_type::PartialFuncNameKind::HostAPI(_) => {
                         unimplemented!()
                     }
                     crate::ir::interface_type::PartialFuncNameKind::Otherwise => {

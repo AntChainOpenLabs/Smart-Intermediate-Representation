@@ -4,7 +4,7 @@
 
 use crate::ir::interface_type::IntrinsicFuncName;
 
-pub struct IrHostapiIntrinsic {
+pub struct IrHostAPIIntrinsic {
     // enum name as key
     pub func_name: IntrinsicFuncName,
     pub ir_func_name: &'static str,

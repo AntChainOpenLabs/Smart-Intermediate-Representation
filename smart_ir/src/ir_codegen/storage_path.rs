@@ -250,7 +250,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         };
 
         let length = if asset_tag > 0 {
-            // If asset metadata is active, please impl your owe business logic and/or HOSTAPI for asset object
+            // If asset metadata is active, please impl your owe business logic and/or HostAPI for asset object
             if has_extend_context() {
                 get_extend_context().asset_get_data_length(asset_tag, self, path_ptr)
             } else {
@@ -292,7 +292,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         };
 
         if asset_tag > 0 {
-            // If asset metadata is active, please impl your owe business logic and/or HOSTAPI for asset object
+            // If asset metadata is active, please impl your owe business logic and/or HostAPI for asset object
             if has_extend_context() {
                 get_extend_context().asset_get_data(asset_tag, self, path_ptr, data);
             } else {
@@ -333,7 +333,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         };
         let (value_ptr, value_length) = self.ssz_encode_with_version(ty, ssz_info, value);
         if asset_tag > 0 {
-            // If asset metadata is active, please impl your owe business logic and/or HOSTAPI for asset object
+            // If asset metadata is active, please impl your owe business logic and/or HostAPI for asset object
             if has_extend_context() {
                 get_extend_context().asset_set_data(
                     asset_tag,
