@@ -7,6 +7,7 @@ pub mod cfg;
 pub mod context;
 pub mod frontend;
 pub mod interface_type;
+pub mod intrinsic_func;
 pub mod metadata;
 pub mod pass_manager;
 pub mod printer;

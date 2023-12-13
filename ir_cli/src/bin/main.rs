@@ -8,8 +8,8 @@ extern crate clap;
 use compiler_base_span::fatal_error::FatalError;
 use compiler_base_span::{FilePathMapping, SourceMap};
 use ir_cli::abi::IRContractABIMeta;
-use ir_cli::vm::MockRuntime;
 use ir_cli::vm::WASM_IR;
+use ir_cli::vm::{init_mock_runtime, MockRuntime};
 use smart_ir::ir::context::IRContext;
 use smart_ir::ir::frontend::translate::translate_main_module;
 use smart_ir::ir::printer::IRPrinter;
@@ -64,7 +64,6 @@ fn main() {
             };
             let ir_abi_meta_info = IRContractABIMeta::from_json(&ir_abi_json_bytes);
 
-            // set_extend_context(Box::new(MockExtendContext::new()));
             let mut mock_runtime = MockRuntime {
                 contract_ir_meta: ir_abi_meta_info,
                 accounts: HashMap::new(),
@@ -84,6 +83,8 @@ fn main() {
                 call_args: vec![],
                 wasm_start_called: false,
             };
+
+            init_mock_runtime();
 
             let module = Module::from_buffer(&wasm_bytes).unwrap();
             let module_ref = ModuleInstance::new(
@@ -137,6 +138,8 @@ fn main() {
                 codes.push(src.clone());
                 source_map.new_source_file(PathBuf::from(filename).into(), src.to_string());
             }
+
+            init_mock_runtime();
 
             let module = smart_ir::ir::frontend::parser::compile(codes[0].as_str());
             let mut ctx = IRContext::default();

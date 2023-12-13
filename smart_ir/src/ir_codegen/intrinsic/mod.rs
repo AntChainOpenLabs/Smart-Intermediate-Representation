@@ -7,8 +7,8 @@ use inkwell::values::FunctionValue;
 
 use crate::integration::hostapi::HostAPI;
 use crate::ir::cfg::Type;
-use crate::ir::interface_type::IntrinsicFuncName;
 use crate::ir::interface_type::PartialFuncNameBehavior;
+use crate::ir::interface_type::{get_all_intrinsic_func_names, IntrinsicFuncName};
 use crate::ir_codegen::common::global::{get_extend_context, has_extend_context};
 use crate::ir_codegen::IR2LLVMCodeGenContext;
 
@@ -23,7 +23,7 @@ mod vector;
 impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
     pub fn is_runtime_abort(&self, ir_func: &IntrinsicFuncName) -> bool {
         matches!(
-            ir_func,
+            ir_func.key,
             IntrinsicFuncName::IR_VECTOR_GET
                 | IntrinsicFuncName::IR_VECTOR_AT
                 | IntrinsicFuncName::IR_VECTOR_SLICE
@@ -38,12 +38,18 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
     }
 
     pub fn get_intrinsic_function_name(
-        ir_func: &IntrinsicFuncName,
+        ir_func_key: &str, // &IntrinsicFuncName,
         params: &[Type],
         ret: &Type,
     ) -> String {
+        let all_intrinsic_func_names = get_all_intrinsic_func_names();
+        let found = all_intrinsic_func_names.get(ir_func_key);
+        if found.is_none() {
+            unreachable!("not supported intrinsic func key {ir_func_key}");
+        }
+        let ir_func = found.unwrap();
         let mut intrinsic_function_name = ir_func.apply_name();
-        match ir_func {
+        match ir_func.key {
             // No need for overloading
             IntrinsicFuncName::IR_VECTOR_CREATE_ITER
             | IntrinsicFuncName::IR_VECTOR_GET_NEXT
@@ -55,12 +61,12 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
             // redirect function name
             IntrinsicFuncName::IR_VECTOR_AT => IR2LLVMCodeGenContext::get_intrinsic_function_name(
-                &IntrinsicFuncName::IR_VECTOR_GET,
+                IntrinsicFuncName::IR_VECTOR_GET,
                 params,
                 ret,
             ),
             IntrinsicFuncName::IR_MAP_INSERT => IR2LLVMCodeGenContext::get_intrinsic_function_name(
-                &IntrinsicFuncName::IR_VECTOR_SET,
+                IntrinsicFuncName::IR_VECTOR_SET,
                 params,
                 ret,
             ),
@@ -114,12 +120,12 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         ret: &Type,
     ) -> FunctionValue<'ctx> {
         let intrinsic_function_name =
-            IR2LLVMCodeGenContext::get_intrinsic_function_name(ir_func, params, ret);
+            IR2LLVMCodeGenContext::get_intrinsic_function_name(ir_func.key, params, ret);
         let mut intrinsics = self.intrinsics.borrow_mut();
         match intrinsics.get(&intrinsic_function_name) {
             Some(func) => *func,
             None => {
-                let func = match ir_func {
+                let func = match ir_func.key {
                     IntrinsicFuncName::IR_VECTOR_SET => self.build_intrinsic_function(
                         &intrinsic_function_name,
                         params,
@@ -880,7 +886,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                             let ext_ctx = get_extend_context();
                             ext_ctx.add_or_get_intrinsic_function(self, func_intrinsic, params, ret)
                         } else {
-                            unreachable!("not found func intrinsic");
+                            unreachable!("not found func intrinsic {}", ir_func.key);
                         }
                     }
                 };

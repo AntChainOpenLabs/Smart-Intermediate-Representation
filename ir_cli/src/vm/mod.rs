@@ -14,7 +14,6 @@ mod context;
 use chrono::Local;
 #[allow(unused_imports)]
 use log::info;
-use std::borrow::Borrow;
 use std::fmt;
 use std::fs::File;
 use std::io::Write;
@@ -27,10 +26,12 @@ use rustc_serialize::hex::ToHex;
 use wasmi::*;
 
 use crate::abi::IRContractABIMeta;
+use crate::vm::context::MockExtendContext;
 use keccak_hash::keccak256;
 use smart_ir::integration::hostapi::HostAPI;
 use smart_ir::ir::context::IRContext;
 use smart_ir::ir::frontend::translate::translate_main_module;
+use smart_ir::ir_codegen::common::global::set_extend_context;
 use smart_ir::ir_config::IROptions;
 use smart_ir::runtime::vm::*;
 
@@ -63,6 +64,10 @@ pub struct MockRuntime {
     /// Cross contract call argument list bytes.
     pub call_args: Vec<Vec<u8>>,
     pub wasm_start_called: bool,
+}
+
+pub fn init_mock_runtime() {
+    set_extend_context(Box::new(MockExtendContext::new()));
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -866,6 +871,7 @@ fn mock_compile(src: &str) -> IRContext {
 }
 pub fn build_mock_runtime(src: &str) -> (MockRuntime, IRContractABIMeta) {
     info!("build_mock_runtime at {:?}", Local::now());
+    init_mock_runtime();
     let ir_context = mock_compile(src);
     let abi_names = RefCell::new(Vec::new());
     let options = IROptions::default();
@@ -882,10 +888,10 @@ pub fn build_mock_runtime(src: &str) -> (MockRuntime, IRContractABIMeta) {
         }
     }
 
-    let mut mock_runtime = MockRuntime {
+    let mock_runtime = MockRuntime {
         contract_ir_meta: ir_contract_abi_info.clone(),
         accounts: HashMap::new(),
-        vm: VirtualMachine::new(emit_wasm_bytes.clone(), Address::from("me")),
+        vm: VirtualMachine::new(emit_wasm_bytes, Address::from("me")),
         store: HashMap::new(),
         events: vec![],
         caller: rand_address(),
