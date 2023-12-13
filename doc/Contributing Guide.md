@@ -16,15 +16,11 @@ appropriate to file an issue open a discussion in our
 
 ## Writing a new feature
 
-// TODO
-
-
 Before writing a new feature please check in one of the following resources if
 there is an existing discussion or if someone is already working on that topic:
 
-- [Umbrella issue](),
-- [All issues](),
-- [Pull Requests]()
+- [All issues](https://github.com/AntChainOpenLabs/Smart-Intermediate-Representation/issues),
+- [Pull Requests](https://github.com/AntChainOpenLabs/Smart-Intermediate-Representation/pulls)
 
 If you don't find an issue regarding your topic, and you are sure it is not more
 feasible to open a thread in the
@@ -36,7 +32,6 @@ Consider developing your feature in a way that has a low barrier of entry so als
 [Rustlings](https://github.com/rust-lang/rustlings) can follow and understand
 the thought process behind it. So we can encourage people to use these patterns
 early on.
-
 
 ## Style guide
 
@@ -81,6 +76,10 @@ give it a description of what you did or want to do. Early reviews of the
 community are not meant as an offense but to give feedback.
 
 A good principle: "Work together, share ideas, teach others."
+
+### Sign the CLA
+
+Since the first time you push a PR request as a contributor, you will be asked to sign a CLA (Contributor License Agreement), please following the instruction to comment in such PR.
 
 ### Important Note
 
