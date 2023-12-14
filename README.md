@@ -63,17 +63,10 @@ contract HelloWorld {
 
 For more examples of IR textual format programs, you can see [IR Example](./ir_example)
 
-### Build the Docker Image for the Command Line Tool
+### Fetch the Docker Image and Build a Test IR Program
 
 ```shell
-$docker build -t smart-ir/ir_cli -f docker/smart_ir_cli/Dockerfile . 
-```
-
-### Build a Test IR Program
-
-```shell
-$cd ./ir_example/
-$docker run -v `pwd`:/project smart_ir/cli build `ir file name` 
+docker run smartir/cli:latest ir_cli build sir/example/hello_world.ir
 ```
 
 ## Documentation
@@ -81,6 +74,8 @@ $docker run -v `pwd`:/project smart_ir/cli build `ir file name`
 The IR Specification document is [here](./doc/specification/SmartIR.md)
 
 ## Roadmap
+
+> **📢 NOTE: This roadmap is tentative, it will be adjusted at any time**
 
 The IR has a high level of compatibility with many blockchains. Here is a brief description of what we envision for the next versions.
 
@@ -113,4 +108,4 @@ The IR is still under development. Contributions are always welcome. Please foll
 [license-shield]: https://img.shields.io/badge/License-Apache_2.0-green.svg?style=for-the-badge
 [license-url]: ./LICENSE
 [issues-shield]: https://img.shields.io/github/issues/AntChainOpenLabs/Smart-Intermediate-Representation.svg?style=for-the-badge
-[issues-url]: #
+[issues-url]: https://github.com/AntChainOpenLabs/Smart-Intermediate-Representation/issues
