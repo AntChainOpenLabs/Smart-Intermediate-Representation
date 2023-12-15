@@ -61,11 +61,9 @@ Rust files.
 
 - Check all rust files:
   - unix: `make fmt-check`
-  - windows: ``
 
 - Automatically fix basic errors:
   - unix: `make fmt`
-  - windows: ``
 
 ## Creating a Pull Request
 
