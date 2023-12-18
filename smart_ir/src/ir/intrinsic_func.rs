@@ -103,6 +103,7 @@ pub fn initialize_intrinisic_func_names() {
         "ir.builtin.add_coverage_counter"
     );
     create_variant_intrinsic!(IR_BUILTIN_COCALL, "ir.builtin.co_call");
+    create_variant_intrinsic!(IR_BUILTIN_CO_CALL, "ir.builtin.co_call");
     // co_call by let a: Contract = Contract("xxx"); a.fib(...)
     create_variant_intrinsic!(IR_BUILTIN_CO_CALL_DIRECTLY, "ir.builtin.co_call_directly");
     // co_call directly by let err: i32 = co_call("xxx","fib",...)
