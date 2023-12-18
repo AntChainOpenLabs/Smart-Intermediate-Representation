@@ -470,6 +470,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                     IntrinsicFuncName::IR_BUILTIN_CO_CALL_DIRECTLY => {
                         self.module.get_function("builtin_co_call").unwrap()
                     }
+                    IntrinsicFuncName::IR_BUILTIN_CO_CALL => {
+                        self.module.get_function("builtin_co_call").unwrap()
+                    }
                     IntrinsicFuncName::IR_BUILTIN_VERIFY_MYCRYPTO_SIGNATURE => self
                         .module
                         .get_function("ir_builtin_verify_mycrypto_signature")
