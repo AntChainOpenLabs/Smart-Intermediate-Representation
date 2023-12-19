@@ -71,7 +71,11 @@ docker run smartir/cli:latest ir_cli build sir/example/hello_world.ir
 
 ## Documentation
 
+coming soon
+
+<!--
 The IR Specification document is [here](./doc/specification/SmartIR.md)
+-->
 
 ## Roadmap
 
@@ -99,7 +103,11 @@ The IR is still under development. Contributions are always welcome. Please foll
 
 ## Community
 
+coming soon
+
+<!--
 * Join us on the [Discord]()
+-->
 
 ## License
 
