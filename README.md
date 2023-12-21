@@ -71,11 +71,7 @@ docker run smartir/cli:latest ir_cli build sir/example/hello_world.ir
 
 ## Documentation
 
-coming soon
-
-<!--
 The IR Specification document is [here](./doc/specification/SmartIR.md)
--->
 
 ## Roadmap
 
