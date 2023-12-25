@@ -24,7 +24,7 @@ RUN yum -y install git
 # ca-certificates
 RUN yum -y install ca-certificates
 
-# rust-1.67.0
+# rust-1.70.0
 # cargo
 # RUN yum -y install rust cargo rustfmt
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
@@ -32,7 +32,7 @@ RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
-RUN rustup default 1.67
+RUN rustup default 1.70
 
 # RUN rustup default stable
 RUN cargo version

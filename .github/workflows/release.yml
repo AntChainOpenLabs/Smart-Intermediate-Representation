@@ -18,7 +18,7 @@ jobs:
       - name: Build the Release
         working-directory: ir_cli 
         run: |
-          rustup default 1.67
+          rustup default 1.70
           make release
           ls _build # there should be a ir.tgz file under the ir_cli/_build directory
       - name: Upload Artifact to Github Releases
