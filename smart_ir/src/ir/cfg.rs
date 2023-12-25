@@ -16,7 +16,7 @@ pub const IR_MAP_ITER_TY: &str = "ir.map.iter";
 pub const IR_PARAMPACK_TY: &str = "ir.builtin.parampack";
 pub const IR_STORAGE_PATH_TY: &str = "ir.builtin.StoragePath";
 
-/// Smart IR Expression
+/// SIR Expression
 /// Identifier refer to a variable, Identifier(0) -> %0
 /// Instr directly refer to an instruction
 /// Literal represents the literal quantity of different basic types

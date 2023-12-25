@@ -1,4 +1,4 @@
-## The Smart IR Builder Image
+## The Smart Intermediate Representation Builder Image
 
 The `smartir/smart-ir-builder` image embeded a development enviroment for developers to code, build and test the project.
 

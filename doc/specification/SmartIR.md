@@ -5,7 +5,7 @@
 
 ## Informal Description of IR
 
-In this section, we discuss various aspects of Smart IR (hereafter IR).
+In this section, we discuss various aspects of Smart Intermediate Representation (hereafter IR).
 
 ### A Simple Example
 The top-level structure of IR is `contract`, `type`, `metadata` and the secondary structure is `state` and `fn`. The following example is a non-recursive Fibonacci sequence function written in IR:
