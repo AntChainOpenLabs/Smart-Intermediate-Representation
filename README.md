@@ -1,6 +1,6 @@
 # The Smart Intermediate Representation
 
-[![Issues][issues-shield]][issues-url] [![MIT License][license-shield]][license-url]
+[![Release][release-shield]][release-url] [![Issues][issues-shield]][issues-url] [![Apache License][license-shield]][license-url]
 
 The Smart Intermediate Representation(short for IR) project is a new compiler framework intended for smart contract development, which is mainly inspired by LLVM, MLIR and Solidity/Yul. The compiler's goals are:
 
@@ -111,6 +111,8 @@ coming soon
 
 [Apache 2.0](./LICENSE)
 
+[release-shield]: https://img.shields.io/github/actions/workflow/status/AntChainOpenLabs/Smart-Intermediate-Representation/release.yml.svg?style=for-the-badge&label=Release
+[release-url]: https://github.com/AntChainOpenLabs/Smart-Intermediate-Representation/releases/tag/v0.0.1-alpha.2
 [license-shield]: https://img.shields.io/badge/License-Apache_2.0-green.svg?style=for-the-badge
 [license-url]: ./LICENSE
 [issues-shield]: https://img.shields.io/github/issues/AntChainOpenLabs/Smart-Intermediate-Representation.svg?style=for-the-badge
