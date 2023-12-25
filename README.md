@@ -30,7 +30,9 @@ The Smart Intermediate Representation(short for IR) project is a new compiler fr
 
 Since the circulation of Blockchain and Smart Contracts, there have been many incidents of exploitation. These incidents are mainly caused by attacks on unsafe smart contracts such as reentrancy issues, and compiler bugs. In the existing cases, it is difficult to investigate or locate once the attack occurs. Most safe/secure cases also require 3rd-party auditing which is very costly.
 
-We propose a universal technical solution to be adapted to any programming language to help blockchain platform/developer make their smart contract trust, safe and high performance.
+Meanwhile, to wring the most performance out of a regular gas allowance, or something else. It's important to optimize both on-chain and off-chain scenarios.
+
+Currently, we propose a universal technical solution to be adapted to any programming language to help blockchain platform/developer make their smart contract safer, high performance and multi-scenario compatibility. 
 
 ## Installation
 
