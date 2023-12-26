@@ -16,7 +16,7 @@ pub trait BuilderMethods: BackendTypes {
     /// SSA cond br instruction.
     fn cond_br(&self, cond: Self::Value, then_bb: Self::BasicBlock, else_bb: Self::BasicBlock);
     /// SSA load instruction.
-    fn load(&self, ptr: Self::Value, name: &str) -> Self::Value;
+    fn load(&self, pointee_ty: Self::Type, ptr: Self::Value, name: &str) -> Self::Value;
     /// SSA cast int to pointer.
     fn int_to_ptr(&self, val: Self::Value, dest_ty: Self::Type) -> Self::Value;
     /// SSA bit cast.

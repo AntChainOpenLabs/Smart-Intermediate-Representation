@@ -56,11 +56,13 @@ SSZ_ENCODE_INT_DECLARE(u16, uint16_t)
 SSZ_ENCODE_INT_DECLARE(u32, uint32_t)
 SSZ_ENCODE_INT_DECLARE(u64, uint64_t)
 SSZ_ENCODE_INT_DECLARE(u128, uint128_t)
+SSZ_ENCODE_INT_DECLARE(u256, uint256_t)
 SSZ_ENCODE_INT_DECLARE(i8, int8_t)
 SSZ_ENCODE_INT_DECLARE(i16, int16_t)
 SSZ_ENCODE_INT_DECLARE(i32, int32_t)
 SSZ_ENCODE_INT_DECLARE(i64, int64_t)
 SSZ_ENCODE_INT_DECLARE(i128, int128_t)
+SSZ_ENCODE_INT_DECLARE(i256, int256_t)
 
 SSZ_DECODE_INT_DECLARE(bool, uint8_t)
 SSZ_DECODE_INT_DECLARE(u8, uint8_t)
@@ -68,11 +70,13 @@ SSZ_DECODE_INT_DECLARE(u16, uint16_t)
 SSZ_DECODE_INT_DECLARE(u32, uint32_t)
 SSZ_DECODE_INT_DECLARE(u64, uint64_t)
 SSZ_DECODE_INT_DECLARE(u128, uint128_t)
+SSZ_DECODE_INT_DECLARE(u256, uint256_t)
 SSZ_DECODE_INT_DECLARE(i8, int8_t)
 SSZ_DECODE_INT_DECLARE(i16, int16_t)
 SSZ_DECODE_INT_DECLARE(i32, int32_t)
 SSZ_DECODE_INT_DECLARE(i64, int64_t)
 SSZ_DECODE_INT_DECLARE(i128, int128_t)
+SSZ_DECODE_INT_DECLARE(i256, int256_t)
 
 int32_t
 ssz_encode_str(const struct vector *v, uint8_t *buf, int32_t hdr_offset,
@@ -147,12 +151,14 @@ IR_BUILTIN_SSZ_ENCODE_INT_DECLARE(u16, uint16_t, 2)
 IR_BUILTIN_SSZ_ENCODE_INT_DECLARE(u32, uint32_t, 4)
 IR_BUILTIN_SSZ_ENCODE_INT_DECLARE(u64, uint64_t, 8)
 IR_BUILTIN_SSZ_ENCODE_INT_DECLARE(u128, uint128_t, 16)
+IR_BUILTIN_SSZ_ENCODE_INT_DECLARE(u256, uint256_t, 32)
 
 IR_BUILTIN_SSZ_ENCODE_INT_DECLARE(i8, int8_t, 1)
 IR_BUILTIN_SSZ_ENCODE_INT_DECLARE(i16, int16_t, 2)
 IR_BUILTIN_SSZ_ENCODE_INT_DECLARE(i32, int32_t, 4)
 IR_BUILTIN_SSZ_ENCODE_INT_DECLARE(i64, int64_t, 8)
 IR_BUILTIN_SSZ_ENCODE_INT_DECLARE(i128, int128_t, 16)
+IR_BUILTIN_SSZ_ENCODE_INT_DECLARE(i256, int256_t, 32)
 
 #define IR_BUILTIN_SSZ_DECODE_INT_DECLARE(id, ty, size) \
     void *ir_builtin_ssz_decode_##id(qvector_t *val)    \
@@ -168,12 +174,14 @@ IR_BUILTIN_SSZ_DECODE_INT_DECLARE(u16, uint16_t, 2)
 IR_BUILTIN_SSZ_DECODE_INT_DECLARE(u32, uint32_t, 4)
 IR_BUILTIN_SSZ_DECODE_INT_DECLARE(u64, uint64_t, 8)
 IR_BUILTIN_SSZ_DECODE_INT_DECLARE(u128, uint128_t, 16)
+IR_BUILTIN_SSZ_DECODE_INT_DECLARE(u256, uint256_t, 32)
 
 IR_BUILTIN_SSZ_DECODE_INT_DECLARE(i8, int8_t, 1)
 IR_BUILTIN_SSZ_DECODE_INT_DECLARE(i16, int16_t, 2)
 IR_BUILTIN_SSZ_DECODE_INT_DECLARE(i32, int32_t, 4)
 IR_BUILTIN_SSZ_DECODE_INT_DECLARE(i64, int64_t, 8)
 IR_BUILTIN_SSZ_DECODE_INT_DECLARE(i128, int128_t, 16)
+IR_BUILTIN_SSZ_DECODE_INT_DECLARE(i256, int256_t, 32)
 
 // When this type is encoded to [u8], whether the length of the array is fixed
 bool
@@ -204,6 +212,10 @@ is_ssz_fixed_len(uint32_t runtime_class_offset)
         {
             return true;
         } break;
+        case IR_RUNTIME_TYPE_U256:
+        {
+            return true;
+        } break;
         case IR_RUNTIME_TYPE_I8:
         {
             return true;
@@ -221,6 +233,10 @@ is_ssz_fixed_len(uint32_t runtime_class_offset)
             return true;
         } break;
         case IR_RUNTIME_TYPE_I128:
+        {
+            return true;
+        } break;
+        case IR_RUNTIME_TYPE_I256:
         {
             return true;
         } break;
@@ -306,6 +322,10 @@ ssz_encode_len(uint32_t runtime_class_offset, void *val)
         {
             return 16;
         } break;
+        case IR_RUNTIME_TYPE_U256:
+        {
+            return 32;
+        } break;
         case IR_RUNTIME_TYPE_I8:
         {
             return 1;
@@ -325,6 +345,10 @@ ssz_encode_len(uint32_t runtime_class_offset, void *val)
         case IR_RUNTIME_TYPE_I128:
         {
             return 16;
+        } break;
+        case IR_RUNTIME_TYPE_I256:
+        {
+            return 32;
         } break;
         case IR_RUNTIME_TYPE_BOOL:
         {
@@ -453,6 +477,10 @@ ssz_fix_ty_length(uint32_t runtime_class_offset)
         {
             return 16;
         } break;
+        case IR_RUNTIME_TYPE_U256:
+        {
+            return 32;
+        } break;
         case IR_RUNTIME_TYPE_I8:
         {
             return 1;
@@ -472,6 +500,10 @@ ssz_fix_ty_length(uint32_t runtime_class_offset)
         case IR_RUNTIME_TYPE_I128:
         {
             return 16;
+        } break;
+        case IR_RUNTIME_TYPE_I256:
+        {
+            return 32;
         } break;
         case IR_RUNTIME_TYPE_BOOL:
         {
@@ -962,6 +994,10 @@ ir_builtin_ssz_encode(uint32_t runtime_class_offset, void *val)
         {
             return ir_builtin_ssz_encode_u128(val);
         } break;
+        case IR_RUNTIME_TYPE_U256:
+        {
+            return ir_builtin_ssz_encode_u256(val);
+        } break;
         case IR_RUNTIME_TYPE_I8:
         {
             return ir_builtin_ssz_encode_i8(val);
@@ -981,6 +1017,10 @@ ir_builtin_ssz_encode(uint32_t runtime_class_offset, void *val)
         case IR_RUNTIME_TYPE_I128:
         {
             return ir_builtin_ssz_encode_i128(val);
+        } break;
+        case IR_RUNTIME_TYPE_I256:
+        {
+            return ir_builtin_ssz_encode_i256(val);
         } break;
         case IR_RUNTIME_TYPE_BOOL:
         {
@@ -1073,6 +1113,10 @@ ir_builtin_ssz_decode_impl(uint32_t runtime_class_offset,
         {
             return ir_builtin_ssz_decode_u128(val);
         } break;
+        case IR_RUNTIME_TYPE_U256:
+        {
+            return ir_builtin_ssz_decode_u256(val);
+        } break;
         case IR_RUNTIME_TYPE_I8:
         {
             return ir_builtin_ssz_decode_i8(val);
@@ -1092,6 +1136,10 @@ ir_builtin_ssz_decode_impl(uint32_t runtime_class_offset,
         case IR_RUNTIME_TYPE_I128:
         {
             return ir_builtin_ssz_decode_i128(val);
+        } break;
+        case IR_RUNTIME_TYPE_I256:
+        {
+            return ir_builtin_ssz_decode_i256(val);
         } break;
         case IR_RUNTIME_TYPE_BOOL:
         {

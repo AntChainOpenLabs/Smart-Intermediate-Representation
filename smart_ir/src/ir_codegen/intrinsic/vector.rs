@@ -7,11 +7,12 @@ use inkwell::values::BasicValueEnum;
 
 use crate::ir::cfg::Type;
 use crate::ir_codegen::builtin_constants::{
-    Q_VECTOR_OBJ_S, Q_VEC_NEW_FUNC_NAME, Q_VEC_SLICE_FUNC_NAME,
+    Q_VECTOR_ITER, Q_VECTOR_OBJ_S, Q_VEC_NEW_FUNC_NAME, Q_VEC_SLICE_FUNC_NAME,
 };
 use crate::ir_codegen::context::IR2LLVMCodeGenContext;
 use crate::ir_codegen::encoding::MALLOC_FUNC_NAME;
 use crate::ir_codegen::traits::{BaseTypeMethods, BuilderMethods};
+use crate::ir_codegen::ty::Q_VEC_LLVM_TY;
 
 impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
     pub fn build_vector_set(
@@ -27,8 +28,8 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         let idx = self.int_cast(idx, self.i32_type(), true);
 
-        let val_ptr = self.builder.build_alloca(val.get_type(), "");
-        self.builder.build_store(val_ptr, val);
+        let val_ptr = self.builder.build_alloca(val.get_type(), "").unwrap();
+        self.builder.build_store(val_ptr, val).unwrap();
 
         // the part of qvector_setat accepts value is a pointer points to actual value(i8*)
         let store_value_u8_ptr = self.ptr_cast(val_ptr.into(), self.i8_ptr_type());
@@ -63,7 +64,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         // need convert i8* to the pointer of target type of vector element, struct T** or int32* etc. that is pointer to pointer or primitive type pointer
         let value_ptr = self.ptr_cast(pointer_to_element, value_llvm_ptr_ty);
 
-        self.builder.build_load(value_ptr.into_pointer_value(), "")
+        self.builder
+            .build_load(self.llvm_type(ret), value_ptr.into_pointer_value(), "")
+            .unwrap()
     }
 
     pub fn build_vector_push(
@@ -75,8 +78,8 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let vec_ptr = *params.get(0).unwrap();
         let val = *params.get(1).unwrap();
 
-        let val_ptr = self.builder.build_alloca(val.get_type(), "");
-        self.builder.build_store(val_ptr, val);
+        let val_ptr = self.builder.build_alloca(val.get_type(), "").unwrap();
+        self.builder.build_store(val_ptr, val).unwrap();
 
         // the part of qvector_setat accepts value is a pointer points to actual value(i8*)
         let store_value_u8_ptr = self.ptr_cast(val_ptr.into(), self.i8_ptr_type());
@@ -94,9 +97,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let vec_ptr = *params.get(0).unwrap();
 
         let iter_size = self
-            .llvm_type(&Type::vec_iter())
-            .into_pointer_type()
-            .get_element_type()
+            .module
+            .get_struct_type(Q_VECTOR_ITER)
+            .unwrap()
             .size_of()
             .unwrap()
             .const_cast(self.i32_type().into_int_type(), false);
@@ -106,10 +109,15 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         let vec_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 0, "")
+            .build_struct_gep(
+                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                0,
+                "",
+            )
             .unwrap();
 
-        self.builder.build_store(vec_field, vec_ptr);
+        self.builder.build_store(vec_field, vec_ptr).unwrap();
 
         let qvector_obj_ty = self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap();
         let malloc_ptr = self.build_call(
@@ -122,14 +130,19 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         );
 
         let obj_ptr = self.ptr_cast(malloc_ptr, self.ptr_type_to(qvector_obj_ty.into()));
-        self.memset_struct_ptr(obj_ptr.into_pointer_value(), 0);
+        self.memset_struct_ptr(obj_ptr.into_pointer_value(), qvector_obj_ty.into(), 0);
 
         let obj_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 1, "")
+            .build_struct_gep(
+                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                1,
+                "",
+            )
             .unwrap();
 
-        self.builder.build_store(obj_field, obj_ptr);
+        self.builder.build_store(obj_field, obj_ptr).unwrap();
 
         iter_ptr
     }
@@ -144,16 +157,40 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         let vec_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 0, "")
+            .build_struct_gep(
+                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                0,
+                "",
+            )
             .unwrap();
-        let vec_ptr = self.builder.build_load(vec_field, "");
+        let vec_ptr = self
+            .builder
+            .build_load(
+                self.module.get_struct_type(Q_VEC_LLVM_TY).unwrap(),
+                vec_field,
+                "",
+            )
+            .unwrap();
 
         let obj_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 1, "")
+            .build_struct_gep(
+                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                1,
+                "",
+            )
             .unwrap();
 
-        let obj_ptr = self.builder.build_load(obj_field, "");
+        let obj_ptr = self
+            .builder
+            .build_load(
+                self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap(),
+                obj_field,
+                "",
+            )
+            .unwrap();
 
         self.build_call(
             "qvector_getnext",
@@ -171,23 +208,44 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         let obj_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 1, "")
+            .build_struct_gep(
+                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                1,
+                "",
+            )
             .unwrap();
 
-        let obj_ptr = self.builder.build_load(obj_field, "");
+        let obj_ptr = self
+            .builder
+            .build_load(
+                self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap(),
+                obj_field,
+                "",
+            )
+            .unwrap();
 
         let idx_field = self
             .builder
-            .build_struct_gep(obj_ptr.into_pointer_value(), 1, "")
+            .build_struct_gep(
+                self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap(),
+                obj_ptr.into_pointer_value(),
+                1,
+                "",
+            )
             .unwrap();
 
-        let next_idx = self.builder.build_load(idx_field, "");
+        let next_idx = self
+            .builder
+            .build_load(self.i32_type(), idx_field, "")
+            .unwrap();
         self.builder
             .build_int_nsw_sub(
                 next_idx.into_int_value(),
                 self.i32_value(1).into_int_value(),
                 "",
             )
+            .unwrap()
             .into()
     }
 
@@ -200,17 +258,39 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let iter_ptr = *params.get(0).unwrap();
         let obj_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 1, "")
+            .build_struct_gep(
+                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                1,
+                "",
+            )
             .unwrap();
 
-        let obj_ptr = self.builder.build_load(obj_field, "");
+        let obj_ptr = self
+            .builder
+            .build_load(
+                self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap(),
+                obj_field,
+                "",
+            )
+            .unwrap();
         let data_field = self
             .builder
-            .build_struct_gep(obj_ptr.into_pointer_value(), 0, "")
+            .build_struct_gep(
+                self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap(),
+                obj_ptr.into_pointer_value(),
+                0,
+                "",
+            )
             .unwrap();
-        let data_ptr = self.builder.build_load(data_field, "");
+        let data_ptr = self
+            .builder
+            .build_load(self.i8_ptr_type(), data_field, "")
+            .unwrap();
         let elem_ptr = self.ptr_cast(data_ptr, self.ptr_type_to(self.llvm_type(ret)));
-        self.builder.build_load(elem_ptr.into_pointer_value(), "")
+        self.builder
+            .build_load(self.llvm_type(ret), elem_ptr.into_pointer_value(), "")
+            .unwrap()
     }
 
     pub fn build_vector_insert(
@@ -225,8 +305,8 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         let idx = self.int_cast(idx, self.i32_type(), true);
 
-        let val_ptr = self.builder.build_alloca(val.get_type(), "");
-        self.builder.build_store(val_ptr, val);
+        let val_ptr = self.builder.build_alloca(val.get_type(), "").unwrap();
+        self.builder.build_store(val_ptr, val).unwrap();
 
         // the part of qvector_setat accepts value is a pointer points to actual value(i8*)
         let store_value_u8_ptr = self.ptr_cast(val_ptr.into(), self.i8_ptr_type());

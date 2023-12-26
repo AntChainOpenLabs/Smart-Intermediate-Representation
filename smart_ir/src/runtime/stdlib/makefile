@@ -1,5 +1,5 @@
 CC=clang
-CFLAGS=$(TARGET_FLAGS) -emit-llvm -O3 -ffreestanding -fno-builtin -Wall -Wno-unused-function -ftrapv -v
+CFLAGS=$(TARGET_FLAGS) -emit-llvm -O3 -Xclang -fexperimental-max-bitint-width=256 -ffreestanding -fno-builtin -Wall -Wno-unused-function -ftrapv -v
 
 wasm/%.bc: %.c
 	$(CC) -c $(CFLAGS) $< -o $@

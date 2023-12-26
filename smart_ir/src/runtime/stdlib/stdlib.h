@@ -18,9 +18,18 @@
 
 #define uint128_t __uint128_t
 #define int128_t __int128_t
+
+// int256 extension needs at least LLVM12
+typedef unsigned _ExtInt(256) uint256_t;
+typedef _ExtInt(256) int256_t;
+
 #define INT128_MAX (__int128) (((unsigned __int128) 1 << ((__SIZEOF_INT128__ * __CHAR_BIT__) - 1)) - 1)
 #define INT128_MIN ((__int128_t)0 - ((__int128_t)1 << 126) - ((__int128_t)1 << 126))
 #define UINT128_MAX (((__uint128_t)INT128_MAX << 1) + 1)
+
+#define INT256_MAX (int256_t) (((uint256_t) 1 << (uint256_t)((2 * __SIZEOF_INT128__ * __CHAR_BIT__) - 1)) - (uint256_t)1)
+#define INT256_MIN ((int256_t)0 - ((int256_t)1 << (int256_t)126) - ((int256_t)1 << (int256_t)126))
+#define UINT256_MAX (((uint256_t)INT256_MAX << (uint256_t)1) + (uint256_t)1)
 
 /*
  * Vector is used for dynamic array
@@ -75,15 +84,20 @@ __tolower(int32_t c);
 char *
 __strcpy(char *__restrict dest, const char *__restrict src);
 size_t
-__numlen(int128_t num);
+__numlen(int256_t num);
 size_t
-__unumlen(uint128_t num);
+__unumlen(uint256_t num);
 int32_t
 __strncmp(const char *_l, const char *_r, size_t n);
-int128_t
-__strtoi128(const char *__restrict nptr, char **__restrict endptr, int base);
-uint128_t
-__strtou128(const char *__restrict nptr, char **__restrict endptr, int base);
+int256_t
+__strtoi256(const char *__restrict nptr, char **__restrict endptr, int base);
+uint256_t
+__strtou256(const char *__restrict nptr, char **__restrict endptr, int base);
+
+//bigint div
+uint256_t div256_u256_rem(uint256_t dividend, uint256_t divisor, uint256_t *remainder);
+
+uint256_t div256_u256(uint256_t dividend, uint256_t divisor);
 
 #define malloc __malloc
 

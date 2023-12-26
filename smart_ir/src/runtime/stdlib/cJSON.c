@@ -24,6 +24,7 @@
 /* JSON parser in C. */
 
 /* disable warnings about old C89 functions in MSVC */
+#include "stdlib.h"
 #if !defined(_CRT_SECURE_NO_DEPRECATE) && defined(_MSC_VER)
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
@@ -73,7 +74,7 @@
 #ifdef _WIN32
 #define NAN sqrt(-1.0)
 #else
-#define NAN 0.0/0.0
+#define NAN (0.0/0.0)
 #endif
 #endif
 
@@ -105,11 +106,11 @@ CJSON_PUBLIC(char *) cJSON_GetStringValue(const cJSON * const item)
     return item->valuestring;
 }
 
-CJSON_PUBLIC(uint128_t) cJSON_GetNumberValue(const cJSON * const item)
+CJSON_PUBLIC(uint256_t) cJSON_GetNumberValue(const cJSON * const item)
 {
     if (!cJSON_IsNumber(item))
     {
-        return (uint128_t) NAN;
+        return (uint256_t) NAN;
     }
 
     return item->valuedouble;
@@ -304,7 +305,7 @@ typedef struct
 /* Parse the input text to generate a number, and populate the result into item. */
 static cJSON_bool parse_number(cJSON * const item, parse_buffer * const input_buffer)
 {
-    uint128_t number = 0;
+    uint256_t number = 0;
     unsigned char *after_end = NULL;
     unsigned char number_c_string[64];
     unsigned char decimal_point = get_decimal_point();
@@ -354,10 +355,10 @@ loop_end:
     number_c_string[i] = '\0';
 
     if (number_c_string[0] == '+' || isdigit(number_c_string[0])) {
-        number = strtou128((const char*)number_c_string, (char**)&after_end, BASE);
+        number = strtou256((const char*)number_c_string, (char**)&after_end, BASE);
     } else {
         item->negsign = true;
-        number = strtoi128((const char*)number_c_string, (char**)&after_end, BASE);
+        number = strtoi256((const char*)number_c_string, (char**)&after_end, BASE);
     }
 
     if (number_c_string == after_end)
@@ -374,19 +375,19 @@ loop_end:
 }
 
 /* don't ask me, but the original cJSON_SetNumberValue returns an integer or double */
-CJSON_PUBLIC(uint128_t) cJSON_SetNumberHelper(cJSON *object, uint128_t number)
+CJSON_PUBLIC(uint256_t) cJSON_SetNumberHelper(cJSON *object, uint256_t number)
 {
-    if ((int128_t)number >= INT128_MAX)
+    if ((int256_t)number >= INT256_MAX)
     {
-        object->valueint = INT128_MAX;
+        object->valueint = INT256_MAX;
     }
-    else if (number <= (uint128_t)INT128_MIN)
+    else if (number <= (uint256_t)INT256_MIN)
     {
-        object->valueint = INT128_MIN;
+        object->valueint = INT256_MIN;
     }
     else
     {
-        object->valueint = (int128_t)number;
+        object->valueint = (int256_t)number;
     }
 
     return object->valuedouble = number;
@@ -446,10 +447,9 @@ static unsigned char* ensure(printbuffer * const p, size_t needed)
         /* make sure that offset is valid */
         return NULL;
     }
-
-    if ((int128_t)needed > INT128_MAX)
+    if ((int256_t)needed > INT256_MAX)
     {
-        /* sizes bigger than INT128_MAX are currently not supported */
+        /* sizes bigger than INT256_MAX are currently not supported */
         return NULL;
     }
 
@@ -464,10 +464,10 @@ static unsigned char* ensure(printbuffer * const p, size_t needed)
     }
 
     /* calculate new buffer size */
-    if ((int128_t)needed > (INT128_MAX / 2))
+    if ((int256_t)needed > (INT256_MAX / (int256_t) 2))
     {
-        /* overflow of int, use INT128_MAX if possible */
-        if ((int128_t)needed <= INT128_MAX)
+        /* overflow of int, use INT256_MAX if possible */
+        if ((int256_t)needed <= (int256_t)INT256_MAX)
         {
             newsize = INT32_MAX;
         }
@@ -531,33 +531,34 @@ static void update_offset(printbuffer * const buffer)
 
 #ifndef DISABLE_FLOAT
 /* securely comparison of floating-point variables */
-static cJSON_bool compare_double(uint128_t a, uint128_t b)
+static cJSON_bool compare_double(uint256_t a, uint256_t b)
 {
-    uint128_t maxVal = fabs(a) > fabs(b) ? fabs(a) : fabs(b);
+    uint256_t maxVal = fabs(a) > fabs(b) ? fabs(a) : fabs(b);
     return (fabs(a - b) <= maxVal * DBL_EPSILON);
 }
 #endif
 
 /* securely comparison of integer variables */
-static cJSON_bool compare_int(uint128_t a, uint128_t b)
+static cJSON_bool compare_int(uint256_t a, uint256_t b)
 {
-    uint128_t diff = a - b;
-    return diff == 0 ;
+    uint256_t diff = a - b;
+    return diff == (uint256_t) 0 ;
 }
 
-static void i128tos(unsigned char *number_buffer, uint128_t decimal, size_t length) {
+static void i256tos(unsigned char *number_buffer, uint256_t decimal, size_t length) {
     size_t neg_flag = 0;
     size_t i = 0;
-    int128_t signed_decimal = 0;
-    signed_decimal = (int128_t)decimal;
-    if ((int128_t)signed_decimal == (int128_t)INT128_MIN) {
-        signed_decimal = signed_decimal + 1;
-        number_buffer[length - 1] = -signed_decimal % 10 + '0' + 1; // should be '8'
-        signed_decimal /= 10;
+    int256_t signed_decimal = 0;
+    signed_decimal = (int256_t)decimal;
+    if ((int256_t)signed_decimal == (int256_t)INT256_MIN) {
+        signed_decimal = signed_decimal + (int256_t) 1;
+        uint256_t rem;
+        signed_decimal = div256_u256_rem(-signed_decimal, (int256_t)10, &rem);
+        number_buffer[length - 1] =(int256_t) rem + (int256_t)(int32_t)'0' + (int256_t)1; // should be '8'
         i = 1;
     }
 
-    if (signed_decimal < 0) {
+    if (signed_decimal < (int256_t) 0) {
         signed_decimal = -signed_decimal;
         (*number_buffer) = '-';
         neg_flag = 1;
@@ -565,17 +566,19 @@ static void i128tos(unsigned char *number_buffer, uint128_t decimal, size_t leng
 
     for (; i < ((size_t)length) - neg_flag; i++)
     {
-        number_buffer[length - i - 1] = signed_decimal % 10 + '0';
-        signed_decimal /= 10;
+        uint256_t rem;
+        signed_decimal = div256_u256_rem(-signed_decimal, (int256_t)10, &rem);
+        number_buffer[length - i - 1] = (int256_t)rem + (int256_t) '0';
     }
 }
 
-static void u128tos(unsigned char *number_buffer, uint128_t decimal, size_t length) {
+static void u256tos(unsigned char *number_buffer, uint256_t decimal, size_t length) {
     size_t i = 0;
     for (i = 0; i < ((size_t)length); i++)
     {
-        number_buffer[length - i - 1] = decimal % 10 + '0';
-        decimal /= 10;
+        uint256_t rem;
+        decimal = div256_u256_rem(decimal, (uint256_t)10, &rem);
+        number_buffer[length - i - 1] = (int256_t)rem + (int256_t) '0';
     }
 }
 
@@ -584,14 +587,14 @@ static cJSON_bool print_number(const cJSON * const item, printbuffer * const out
 {
     unsigned char *output_pointer = NULL;
 #ifndef DISABLE_FLOAT
-    uint128_t d = item->valuedouble;
+    uint256_t d = item->valuedouble;
 #endif
     int length = 0;
     size_t i = 0;
     unsigned char number_buffer[64] = {0}; /* temporary buffer to print the number into */
     unsigned char decimal_point = get_decimal_point();
 #ifndef DISABLE_FLOAT
-    uint128_t test = 0.0;
+    uint256_t test = 0.0;
 #endif
 
     if (output_buffer == NULL)
@@ -604,7 +607,7 @@ static cJSON_bool print_number(const cJSON * const item, printbuffer * const out
     {
         length = sprintf((char*)number_buffer, "null");
     }
-	else if(d == (uint128_t)item->valueint)
+	else if(d == (uint256_t)item->valueint)
 	{
 		length = sprintf((char*)number_buffer, "%d", item->valueint);
 	}
@@ -614,7 +617,7 @@ static cJSON_bool print_number(const cJSON * const item, printbuffer * const out
         length = sprintf((char*)number_buffer, "%1.15g", d);
 
         /* Check whether the original double can be recovered */
-        if ((sscanf((char*)number_buffer, "%lg", &test) != 1) || !compare_double((uint128_t)test, d))
+        if ((sscanf((char*)number_buffer, "%lg", &test) != 1) || !compare_double((uint256_t)test, d))
         {
             /* If not, print with 17 decimal places of precision */
             length = sprintf((char*)number_buffer, "%1.17g", d);
@@ -622,11 +625,11 @@ static cJSON_bool print_number(const cJSON * const item, printbuffer * const out
     }
 #else
     if (item->negsign) {
-        length = numlen((int128_t)item->valueint);
-        i128tos(number_buffer, item->valueint, length);
+        length = numlen((int256_t)item->valueint);
+        i256tos(number_buffer, item->valueint, length);
     } else {
         length = unumlen(item->valueint);
-        u128tos(number_buffer, item->valueint, length);
+        u256tos(number_buffer, item->valueint, length);
     }
 
 #endif
@@ -2177,7 +2180,7 @@ CJSON_PUBLIC(cJSON*) cJSON_AddBoolToObject(cJSON * const object, const char * co
     return NULL;
 }
 
-CJSON_PUBLIC(cJSON*) cJSON_AddNumberToObject(cJSON * const object, const char * const name, const uint128_t number, bool sign)
+CJSON_PUBLIC(cJSON*) cJSON_AddNumberToObject(cJSON * const object, const char * const name, const uint256_t number, bool sign)
 {
     cJSON *number_item = cJSON_CreateNumber(number, sign);
     if (add_item_to_object(object, name, number_item, &global_hooks, false))
@@ -2479,10 +2482,10 @@ CJSON_PUBLIC(cJSON *) cJSON_CreateBool(cJSON_bool boolean)
     return item;
 }
 
-CJSON_PUBLIC(cJSON *) cJSON_CreateNumber(uint128_t num, bool sign)
+CJSON_PUBLIC(cJSON *) cJSON_CreateNumber(uint256_t num, bool sign)
 {
     cJSON *item = cJSON_New_Item(&global_hooks);
-    int128_t signnum = 0;
+    int256_t signnum = 0;
     if(item)
     {
         item->type = cJSON_Number;
@@ -2491,9 +2494,9 @@ CJSON_PUBLIC(cJSON *) cJSON_CreateNumber(uint128_t num, bool sign)
         item->negsign = sign;
         /* use saturation in case of overflow */
         if (sign) {
-            signnum = (int128_t)num;
-            if (signnum >= 0) {
-                char msg[] = "JSON Number Overflow: signed number smaller than INT128_MIN";
+            signnum = (int256_t)num;
+            if (signnum >= (int256_t) 0) {
+                char msg[] = "JSON Number Overflow: signed number smaller than INT256_MIN";
                 IR_ABORT(msg, sizeof(msg) - 1);
             }
         }
@@ -2647,7 +2650,7 @@ CJSON_PUBLIC(cJSON *) cJSON_CreateFloatArray(const float *numbers, int count)
 
     for(i = 0; a && (i < (size_t)count); i++)
     {
-        n = cJSON_CreateNumber((uint128_t)numbers[i], false);
+        n = cJSON_CreateNumber((uint256_t) (uint128_t)numbers[i], false);
         if(!n)
         {
             cJSON_Delete(a);
@@ -2671,7 +2674,7 @@ CJSON_PUBLIC(cJSON *) cJSON_CreateFloatArray(const float *numbers, int count)
     return a;
 }
 
-CJSON_PUBLIC(cJSON *) cJSON_CreateDoubleArray(const uint128_t *numbers, int count)
+CJSON_PUBLIC(cJSON *) cJSON_CreateDoubleArray(const uint256_t *numbers, int count)
 {
     size_t i = 0;
     cJSON *n = NULL;

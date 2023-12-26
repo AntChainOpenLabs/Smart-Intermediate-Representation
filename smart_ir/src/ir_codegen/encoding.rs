@@ -80,7 +80,10 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         } else {
             let value_llvm_ptr_ty = self.ptr_type_to(self.llvm_type(ty));
             let value_ptr = self.ptr_cast(void_ptr, value_llvm_ptr_ty);
-            return self.builder.build_load(value_ptr.into_pointer_value(), "");
+            return self
+                .builder
+                .build_load(self.llvm_type(ty), value_ptr.into_pointer_value(), "")
+                .unwrap();
         }
     }
 
@@ -95,8 +98,8 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let void_ptr = if ty.is_reference_type() || ty.is_string() {
             self.ptr_cast(value, self.i8_ptr_type())
         } else {
-            let val_ptr = self.builder.build_alloca(self.llvm_type(ty), "");
-            self.builder.build_store(val_ptr, value);
+            let val_ptr = self.builder.build_alloca(self.llvm_type(ty), "").unwrap();
+            self.builder.build_store(val_ptr, value).unwrap();
             self.ptr_cast(val_ptr.into(), self.i8_ptr_type())
         };
 
@@ -116,6 +119,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                     self.i32_value(U16_SIZE).into_int_value(),
                     "",
                 )
+                .unwrap()
                 .into();
             let versioned_value_ptr = self.build_call(MALLOC_FUNC_NAME, &[versioned_value_length]);
 
@@ -173,9 +177,11 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 name,
             )
         } else if ty.is_boolean() {
-            self.builder.build_alloca(self.llvm_type(&Type::u8()), name)
+            self.builder
+                .build_alloca(self.llvm_type(&Type::u8()), name)
+                .unwrap()
         } else if ty.is_integer() {
-            self.builder.build_alloca(self.llvm_type(ty), name)
+            self.builder.build_alloca(self.llvm_type(ty), name).unwrap()
         } else if ty.is_array() {
             let stream_len = len;
             // Data stream decoding vector buffer
@@ -218,7 +224,10 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             &[ptr.into(), data, offset, len],
         );
         if ty.is_boolean() {
-            let u8_value = self.builder.build_load(ptr, "");
+            let u8_value = self
+                .builder
+                .build_load(self.llvm_type(&Type::u8()), ptr, "")
+                .unwrap();
             let bool_value: BasicValueEnum = self
                 .builder
                 .build_int_compare(
@@ -227,9 +236,10 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                     self.i8_value(0).into_int_value(),
                     "",
                 )
+                .unwrap()
                 .into();
-            ptr = self.builder.build_alloca(self.llvm_type(ty), name);
-            self.builder.build_store(ptr, bool_value);
+            ptr = self.builder.build_alloca(self.llvm_type(ty), name).unwrap();
+            self.builder.build_store(ptr, bool_value).unwrap();
         }
         (ptr, next_offset)
     }
@@ -247,18 +257,22 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         // Temporary solution for passing parampack parameter
         if !is_parampack && types.len() == 1 && types[0].is_parampack() {
             let len = self.vector_len(values[0]);
-            let total_size =
-                self.builder
-                    .build_int_add(len, self.i32_value(1).into_int_value(), "");
+            let total_size = self
+                .builder
+                .build_int_add(len, self.i32_value(1).into_int_value(), "")
+                .unwrap();
             let bytes = self.build_call(MALLOC_FUNC_NAME, &[total_size.into()]);
             let first_byte = unsafe {
-                self.builder.build_in_bounds_gep(
-                    bytes.into_pointer_value(),
-                    &[self.native_i8(0)],
-                    "",
-                )
+                self.builder
+                    .build_in_bounds_gep(
+                        self.i8_type(),
+                        bytes.into_pointer_value(),
+                        &[self.native_i8(0)],
+                        "",
+                    )
+                    .unwrap()
             };
-            self.builder.build_store(first_byte, version);
+            self.builder.build_store(first_byte, version).unwrap();
 
             self.build_call(
                 "memcpy_offset",
@@ -275,9 +289,10 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         let mut total_size = self.data_stream_len(types, values);
         if !is_parampack {
-            total_size =
-                self.builder
-                    .build_int_add(total_size, self.i32_value(1).into_int_value(), "");
+            total_size = self
+                .builder
+                .build_int_add(total_size, self.i32_value(1).into_int_value(), "")
+                .unwrap();
         }
 
         let bytes = self
@@ -287,9 +302,10 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             // Set the first version byte.
             let first_byte = unsafe {
                 self.builder
-                    .build_in_bounds_gep(bytes, &[self.native_i8(0)], "")
-            };
-            self.builder.build_store(first_byte, version);
+                    .build_in_bounds_gep(self.i8_type(), bytes, &[self.native_i8(0)], "")
+            }
+            .unwrap();
+            self.builder.build_store(first_byte, version).unwrap();
         }
 
         let mut offset = if is_parampack {
@@ -336,7 +352,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 let leb128_bytes_length = self
                     .build_call(ULEB128_VALUE_LENGTH_FUNC_NAME, &[len.into()])
                     .into_int_value();
-                self.builder.build_int_add(len, leb128_bytes_length, "")
+                self.builder
+                    .build_int_add(len, leb128_bytes_length, "")
+                    .unwrap()
             } else if ty.is_array() {
                 let len = self.q_vector_len(*value);
                 let elem_size = if let Type::Array { elem, len: _ } = ty {
@@ -350,18 +368,23 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 let leb128_bytes_length = self
                     .build_call(ULEB128_VALUE_LENGTH_FUNC_NAME, &[len.into()])
                     .into_int_value();
-                self.builder.build_int_add(
-                    self.builder.build_int_mul(len, elem_size, ""),
-                    leb128_bytes_length,
-                    "",
-                )
+                self.builder
+                    .build_int_add(
+                        self.builder.build_int_mul(len, elem_size, "").unwrap(),
+                        leb128_bytes_length,
+                        "",
+                    )
+                    .unwrap()
             } else if ty.is_map() {
                 self.build_call("qhashtbl_total_space", &[*value])
                     .into_int_value()
             } else {
                 unimplemented!()
             };
-            total_size = self.builder.build_int_add(total_size, val_size, "")
+            total_size = self
+                .builder
+                .build_int_add(total_size, val_size, "")
+                .unwrap()
         }
         total_size
     }
@@ -376,11 +399,14 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
     ) -> PointerValue<'ctx> {
         // Data stream decoding vector buffer
         let size = self.build_call(DECODE_ULEB128_VALUE_FUNC_NAME, &[data, offset, len]);
-        let init = self.builder.build_int_to_ptr(
-            self.llvm_context.i128_type().const_zero(),
-            self.i8_ptr_type().into_pointer_type(),
-            name,
-        );
+        let init = self
+            .builder
+            .build_int_to_ptr(
+                self.llvm_context.i128_type().const_zero(),
+                self.i8_ptr_type().into_pointer_type(),
+                name,
+            )
+            .unwrap();
         self.build_call(VECTOR_NEW_FUNC_NAME, &[size, elem_size, init.into()])
             .into_pointer_value()
     }

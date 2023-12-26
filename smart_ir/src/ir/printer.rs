@@ -122,11 +122,13 @@ impl IRPrinter<'_> {
                     IntType::I32 => write!(w, "i32"),
                     IntType::I64 => write!(w, "i64"),
                     IntType::I128 => write!(w, "i128"),
+                    IntType::I256 => write!(w, "i256"),
                     IntType::U8 => write!(w, "u8"),
                     IntType::U16 => write!(w, "u16"),
                     IntType::U32 => write!(w, "u32"),
                     IntType::U64 => write!(w, "u64"),
                     IntType::U128 => write!(w, "u128"),
+                    IntType::U256 => write!(w, "u256"),
                 },
             },
             Type::Map { key, value } => {
@@ -477,11 +479,13 @@ impl IRPrinter<'_> {
                 IntLiteral::I32(val) => write!(w, "{val}: i32"),
                 IntLiteral::I64(val) => write!(w, "{val}: i64"),
                 IntLiteral::I128(val) => write!(w, "{val}: i128"),
+                IntLiteral::I256(val) => write!(w, "{val}: i256"),
                 IntLiteral::U8(val) => write!(w, "{val}: u8"),
                 IntLiteral::U16(val) => write!(w, "{val}: u16"),
                 IntLiteral::U32(val) => write!(w, "{val}: u32"),
                 IntLiteral::U64(val) => write!(w, "{val}: u64"),
                 IntLiteral::U128(val) => write!(w, "{val}: u128"),
+                IntLiteral::U256(val) => write!(w, "{val}: u256"),
             },
         }
     }

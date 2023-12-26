@@ -104,6 +104,10 @@ vector_insert(struct vector *v, struct vector *sub, int32_t index,
 qvector_t * 
 vector_to_bytes(struct vector *v);
 
+void
+vector_appd(struct vector *v, uint8_t *bytes, uint32_t len,
+            struct RuntimeContext *ctx);
+
 #ifdef __cplusplus
 } // end extern "C"
 #endif

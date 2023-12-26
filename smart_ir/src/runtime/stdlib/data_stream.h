@@ -45,6 +45,11 @@ extern int32_t
 data_stream_decode_u128(__uint128_t *v, uint8_t *buf, int32_t offset,
                         int32_t len);
 extern int32_t
+data_stream_encode_u256(uint256_t v, uint8_t *buf, int32_t offset);
+extern int32_t
+data_stream_decode_u256(uint256_t *v, uint8_t *buf, int32_t offset,
+                        int32_t len);
+extern int32_t
 data_stream_encode_i8(int8_t v, uint8_t *buf, int32_t offset);
 extern int32_t
 data_stream_decode_i8(int8_t *v, uint8_t *buf, int32_t offset, int32_t len);
@@ -64,6 +69,11 @@ extern int32_t
 data_stream_encode_i128(__int128_t v, uint8_t *buf, int32_t offset);
 extern int32_t
 data_stream_decode_i128(__int128_t *v, uint8_t *buf, int32_t offset,
+                        int32_t len);
+extern int32_t
+data_stream_encode_i256(int256_t v, uint8_t *buf, int32_t offset);
+extern int32_t
+data_stream_decode_i256(int256_t *v, uint8_t *buf, int32_t offset,
                         int32_t len);
 
 extern int32_t
@@ -122,6 +132,12 @@ extern int32_t
 data_stream_decode_u128array(qvector_t *v, uint8_t *buf, int32_t offset,
                              int32_t len);
 extern int32_t
+data_stream_encode_u256array(qvector_t *v, uint8_t *buf, int32_t offset,
+                             struct RuntimeContext *ctx);
+extern int32_t
+data_stream_decode_u256array(qvector_t *v, uint8_t *buf, int32_t offset,
+                             int32_t len);
+extern int32_t
 data_stream_encode_i8array(qvector_t *v, uint8_t *buf, int32_t offset,
                            struct RuntimeContext *ctx);
 extern int32_t
@@ -150,6 +166,12 @@ data_stream_encode_i128array(qvector_t *v, uint8_t *buf, int32_t offset,
                              struct RuntimeContext *ctx);
 extern int32_t
 data_stream_decode_i128array(qvector_t *v, uint8_t *buf, int32_t offset,
+                             int32_t len);
+extern int32_t
+data_stream_encode_i256array(qvector_t *v, uint8_t *buf, int32_t offset,
+                             struct RuntimeContext *ctx);
+extern int32_t
+data_stream_decode_i256array(qvector_t *v, uint8_t *buf, int32_t offset,
                              int32_t len);
 
 /* Map */
@@ -184,6 +206,11 @@ extern int32_t
 data_stream_decode_stru128map(qhashtbl_t *v, uint8_t *buf, int32_t offset,
                               int32_t len);
 extern int32_t
+data_stream_encode_stru256map(qhashtbl_t *v, uint8_t *buf, int32_t offset);
+extern int32_t
+data_stream_decode_stru256map(qhashtbl_t *v, uint8_t *buf, int32_t offset,
+                              int32_t len);
+extern int32_t
 data_stream_encode_stri8map(qhashtbl_t *v, uint8_t *buf, int32_t offset);
 extern int32_t
 data_stream_decode_stri8map(qhashtbl_t *v, uint8_t *buf, int32_t offset,
@@ -207,6 +234,11 @@ extern int32_t
 data_stream_encode_stri128map(qhashtbl_t *v, uint8_t *buf, int32_t offset);
 extern int32_t
 data_stream_decode_stri128map(qhashtbl_t *v, uint8_t *buf, int32_t offset,
+                              int32_t len);
+extern int32_t
+data_stream_encode_stri256map(qhashtbl_t *v, uint8_t *buf, int32_t offset);
+extern int32_t
+data_stream_decode_stri256map(qhashtbl_t *v, uint8_t *buf, int32_t offset,
                               int32_t len);
 extern int32_t
 data_stream_encode_strstrmap(qhashtbl_t *v, uint8_t *buf, int32_t offset);

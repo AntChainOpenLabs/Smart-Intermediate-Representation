@@ -88,8 +88,11 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let void_ptr = if val_ty.is_reference_type() || val_ty.is_string() {
             self.ptr_cast(val, self.i8_ptr_type())
         } else {
-            let val_ptr = self.builder.build_alloca(self.llvm_type(val_ty), "");
-            self.builder.build_store(val_ptr, val);
+            let val_ptr = self
+                .builder
+                .build_alloca(self.llvm_type(val_ty), "")
+                .unwrap();
+            self.builder.build_store(val_ptr, val).unwrap();
             self.ptr_cast(val_ptr.into(), self.i8_ptr_type())
         };
         self.build_call("ir_builtin_rlp_encode", &[offset_value, void_ptr])
@@ -108,8 +111,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         if ret.is_reference_type() || ret.is_string() {
             self.ptr_cast(void_ptr, self.llvm_type(ret))
         } else {
-            let val_ptr = self.ptr_cast(void_ptr, self.ptr_type_to(self.llvm_type(ret)));
-            self.builder.build_load(val_ptr.into_pointer_value(), "")
+            self.builder
+                .build_load(self.llvm_type(ret), void_ptr.into_pointer_value(), "")
+                .unwrap()
         }
     }
 
@@ -129,8 +133,11 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let void_ptr = if val_ty.is_reference_type() || val_ty.is_string() {
             self.ptr_cast(val, self.i8_ptr_type())
         } else {
-            let val_ptr = self.builder.build_alloca(self.llvm_type(val_ty), "");
-            self.builder.build_store(val_ptr, val);
+            let val_ptr = self
+                .builder
+                .build_alloca(self.llvm_type(val_ty), "")
+                .unwrap();
+            self.builder.build_store(val_ptr, val).unwrap();
             self.ptr_cast(val_ptr.into(), self.i8_ptr_type())
         };
         self.build_call("ir_builtin_json_encode", &[offset_value, void_ptr])
@@ -149,8 +156,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         if ret.is_reference_type() || ret.is_string() {
             self.ptr_cast(void_ptr, self.llvm_type(ret))
         } else {
-            let val_ptr = self.ptr_cast(void_ptr, self.ptr_type_to(self.llvm_type(ret)));
-            self.builder.build_load(val_ptr.into_pointer_value(), "")
+            self.builder
+                .build_load(self.llvm_type(ret), void_ptr.into_pointer_value(), "")
+                .unwrap()
         }
     }
 
@@ -170,8 +178,11 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let void_ptr = if val_ty.is_reference_type() || val_ty.is_string() {
             self.ptr_cast(val, self.i8_ptr_type())
         } else {
-            let val_ptr = self.builder.build_alloca(self.llvm_type(val_ty), "");
-            self.builder.build_store(val_ptr, val);
+            let val_ptr = self
+                .builder
+                .build_alloca(self.llvm_type(val_ty), "")
+                .unwrap();
+            self.builder.build_store(val_ptr, val).unwrap();
             self.ptr_cast(val_ptr.into(), self.i8_ptr_type())
         };
         self.build_call("ir_builtin_ssz_encode", &[offset_value, void_ptr])
@@ -191,7 +202,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             self.ptr_cast(void_ptr, self.llvm_type(ret))
         } else {
             let val_ptr = self.ptr_cast(void_ptr, self.ptr_type_to(self.llvm_type(ret)));
-            self.builder.build_load(val_ptr.into_pointer_value(), "")
+            self.builder
+                .build_load(self.llvm_type(ret), val_ptr.into_pointer_value(), "")
+                .unwrap()
         }
     }
 
@@ -211,7 +224,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         if ret.is_reference_type() || ret.is_string() {
             void_ptr.into()
         } else {
-            self.builder.build_load(void_ptr, "")
+            self.builder
+                .build_load(self.llvm_type(ret), void_ptr, "")
+                .unwrap()
         }
     }
 
@@ -245,20 +260,15 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             let length = self
                 .build_call(HostAPI::GetCallResultLength.name(), &[])
                 .into_int_value();
-            let data = self
-                .build_call(MALLOC_FUNC_NAME, &[length.into()])
-                .into_pointer_value();
-            let data = unsafe {
-                self.builder
-                    .build_in_bounds_gep(data, &[self.native_i8(0)], "")
-                    .into()
-            };
+            let data = self.build_call(MALLOC_FUNC_NAME, &[length.into()]);
             self.build_void_call(HostAPI::GetCallResult.name(), &[data]);
             let (ptr, _) = self.data_stream_decode(ret, data, self.i32_value(1), length.into(), "");
             if ret.is_reference_type() || ret.is_string() {
                 ptr.into()
             } else {
-                self.builder.build_load(ptr, "")
+                self.builder
+                    .build_load(self.llvm_type(ret), ptr, "")
+                    .unwrap()
             }
         } else {
             self.i32_value(1)
@@ -272,14 +282,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         _ret: &Type,
     ) -> BasicValueEnum<'ctx> {
         let length = self.build_call(HostAPI::GetCallResultLength.name(), &[]);
-        let data = self
-            .build_call(MALLOC_FUNC_NAME, &[length])
-            .into_pointer_value();
-        let data = unsafe {
-            self.builder
-                .build_in_bounds_gep(data, &[self.native_i8(0)], "")
-                .into()
-        };
+        let data = self.build_call(MALLOC_FUNC_NAME, &[length]);
 
         self.build_void_call(HostAPI::GetCallResult.name(), &[data]);
 

@@ -52,6 +52,8 @@ POW_INT_DECLARE(u64, uint64_t);
 
 POW_INT_DECLARE(u128, __uint128_t);
 
+POW_INT_DECLARE(u256, uint256_t);
+
 POW_INT_DECLARE(i8, int8_t);
 
 POW_INT_DECLARE(i16, int16_t);
@@ -62,8 +64,10 @@ POW_INT_DECLARE(i64, int64_t);
 
 POW_INT_DECLARE(i128, __int128_t);
 
+POW_INT_DECLARE(i256, int256_t);
+
 // when num is negative, split to two parts to avoid int_min parsed to negative int
-#define MAX_ITOA_STR_SIZE 128
+#define MAX_ITOA_STR_SIZE 256
 #define INT_TO_A(id, ty, uty)                                           \
     char *builtin_##id##_toa(ty num, int radix)                         \
     {                                                                   \
@@ -73,24 +77,26 @@ POW_INT_DECLARE(i128, __int128_t);
         }                                                               \
         char *str = (char *)__malloc(MAX_ITOA_STR_SIZE * sizeof(char)); \
         char index[] = "0123456789abcdefghijklmnopqrstuvwxyz";          \
-        uint128_t unum;                                                 \
+        uint256_t unum;                                                 \
         int i = 0, j, k;                                                \
-        if (radix == 10 && num < 0) {                                   \
-            ty num_first = num / 2;                                     \
+        if (radix == 10 && num < (ty) 0) {                              \
+            ty num_first = num >> 1;                                    \
             ty num_second = num - num_first;                            \
-            unum = ((uint128_t)-num_first) + ((uint128_t)-num_second);  \
+            unum = ((uint256_t)-num_first) + ((uint256_t)-num_second);  \
             str[i++] = '-';                                             \
         }                                                               \
         else {                                                          \
-            unum = (uint128_t)(uty)num;                                 \
+            unum = (uint256_t)(uty)num;                                 \
         }                                                               \
         do {                                                            \
             if (i >= MAX_ITOA_STR_SIZE) {                               \
                 free(str);                                              \
                 return NULL;                                            \
             }                                                           \
-            str[i++] = index[unum % (unsigned)radix];                   \
-            unum /= radix;                                              \
+            uint256_t rem;                                             \
+            unum = div256_u256_rem(unum,(uint256_t)radix , &rem);      \
+            str[i++] = index[rem];                                      \
+                                                                        \
         } while (unum);                                                 \
                                                                         \
         str[i] = '\0';                                                  \
@@ -122,6 +128,8 @@ INT_TO_A(i64, int64_t, uint64_t);
 
 INT_TO_A(i128, __int128_t, __uint128_t);
 
+INT_TO_A(i256, int256_t, uint256_t);
+
 INT_TO_A(u8, uint8_t,uint8_t);
 
 INT_TO_A(u16, uint16_t, uint16_t);
@@ -131,6 +139,8 @@ INT_TO_A(u32, uint32_t, uint32_t);
 INT_TO_A(u64, uint64_t, uint64_t);
 
 INT_TO_A(u128, __uint128_t, __uint128_t);
+
+INT_TO_A(u256, uint256_t, uint256_t);
 
 #define INT_TO_STR(id, ty)                                        \
     struct vector *ir_builtin_##id##_to_str(ty num, int radix) \
@@ -149,6 +159,8 @@ INT_TO_STR(i64, int64_t);
 
 INT_TO_STR(i128, __int128_t);
 
+INT_TO_STR(i256, int256_t);
+
 INT_TO_STR(u8, uint8_t);
 
 INT_TO_STR(u16, uint16_t);
@@ -158,6 +170,8 @@ INT_TO_STR(u32, uint32_t);
 INT_TO_STR(u64, uint64_t);
 
 INT_TO_STR(u128, __uint128_t);
+
+INT_TO_STR(u256, uint256_t);
 
 // this tmp result must use _target_unsigned_type, otherwise the negative min value decode will cause overflow
 // the for loop index i must be signed int to avoid loop
@@ -198,14 +212,14 @@ INT_TO_STR(u128, __uint128_t);
             return result;                                             \
         }                                                              \
         uint32_t digit_int =  digit - '0';                             \
-        _target_unsigned_type new_result = result + (digit_multiply * digit_int); \
+        _target_unsigned_type new_result = result +  (digit_multiply * (_target_unsigned_type) digit_int); \
         if (new_result < result) {                                     \
             char msg[] = "str to int failed: overflow";                \
             IR_ABORT(msg, sizeof(msg) - 1);                         \
             return result;                                             \
         }                                                              \
         result = new_result;                                           \
-        digit_multiply *= radix;                                       \
+        digit_multiply *= (_target_unsigned_type) radix;                                       \
         digits_count++;                                                \
     }                                                                  \
     if (digits_count < 1) {                                            \
@@ -214,7 +228,7 @@ INT_TO_STR(u128, __uint128_t);
         return result;                                                 \
     }                                                                  \
     if (neg) {                                                         \
-        _target_unsigned_type result_first = result / 2;               \
+        _target_unsigned_type result_first = result >> (_target_unsigned_type) 1;               \
         _target_unsigned_type result_second = result - result_first;   \
         return - ((_target_type) result_first) - ((_target_type) result_second); \
     }                                                                  \
@@ -229,4 +243,15 @@ ir_builtin_str_to_i128(struct vector *arg_str) {
 __uint128_t
 ir_builtin_str_to_u128(struct vector *arg_str) {
     COMMON_STR_TO_INTEGER(arg_str, __uint128_t, __uint128_t, false, 10)
+}
+
+
+int256_t
+ir_builtin_str_to_i256(struct vector *arg_str) {
+    COMMON_STR_TO_INTEGER(arg_str, int256_t, int256_t, true, 10);
+}
+
+uint256_t
+ir_builtin_str_to_u256(struct vector *arg_str) {
+    COMMON_STR_TO_INTEGER(arg_str, int256_t, int256_t, false, 10)
 }

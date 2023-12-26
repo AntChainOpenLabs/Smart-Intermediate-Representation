@@ -4,12 +4,6 @@
 
 #include "./call_log.h"
 
-extern void
-log(int32_t topics, uint32_t topics_d1_length, uint32_t topics_length,
-    uint32_t desc, uint32_t desc_length);
-
-extern void
-println(uint32_t src, uint32_t len);
 
 void
 ir_builtin_call_log(qvector_t *topics, qvector_t *desc)

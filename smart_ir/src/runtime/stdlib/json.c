@@ -50,7 +50,7 @@ cjson_to_ir_type(uint32_t runtime_class_offset, cJSON *obj);
     cJSON *ir_builtin_json_encode_##id(void *val)          \
     {                                                         \
         ty v = *(ty *)val;                                    \
-        cJSON *ret = cJSON_CreateNumber((uint128_t)v, v < 0); \
+        cJSON *ret = cJSON_CreateNumber((uint256_t)v, (uint256_t) v < (uint256_t) 0); \
         return ret;                                           \
     }
 
@@ -67,12 +67,14 @@ IR_BUILTIN_JSON_ENCODE_INT_DECLARE(u16, uint16_t)
 IR_BUILTIN_JSON_ENCODE_INT_DECLARE(u32, uint32_t)
 IR_BUILTIN_JSON_ENCODE_INT_DECLARE(u64, uint64_t)
 IR_BUILTIN_JSON_ENCODE_INT_DECLARE(u128, uint128_t)
+IR_BUILTIN_JSON_ENCODE_INT_DECLARE(u256, uint256_t)
 
 IR_BUILTIN_JSON_ENCODE_INT_DECLARE(i8, int8_t)
 IR_BUILTIN_JSON_ENCODE_INT_DECLARE(i16, int16_t)
 IR_BUILTIN_JSON_ENCODE_INT_DECLARE(i32, int32_t)
 IR_BUILTIN_JSON_ENCODE_INT_DECLARE(i64, int64_t)
 IR_BUILTIN_JSON_ENCODE_INT_DECLARE(i128, int128_t)
+IR_BUILTIN_JSON_ENCODE_INT_DECLARE(i256, int256_t)
 
 cJSON *
 ir_builtin_json_encode_str(void *val)
@@ -163,7 +165,7 @@ ir_builtin_json_encode_map(uint32_t runtime_class_offset, void *val)
     while (qhashtbl_getnext(v, &item, true)) {
         void *val_ptr =
             get_data_ptr_of_ptr_value(runtime_class->map_value_ty, item.data);
-        char *key = item.key;
+        char *key = (char *)item.key;
         if (TABLE_KEY_IS_INT(v)) {
             key = builtin_i64_toa(item.key, 10);
         }
@@ -204,6 +206,10 @@ ir_type_to_cjson(uint32_t runtime_class_offset, void *val)
         {
             return ir_builtin_json_encode_u128(val);
         } break;
+        case IR_RUNTIME_TYPE_U256:
+        {
+            return ir_builtin_json_encode_u256(val);
+        } break;
         case IR_RUNTIME_TYPE_I8:
         {
             return ir_builtin_json_encode_i8(val);
@@ -223,6 +229,10 @@ ir_type_to_cjson(uint32_t runtime_class_offset, void *val)
         case IR_RUNTIME_TYPE_I128:
         {
             return ir_builtin_json_encode_i128(val);
+        } break;
+        case IR_RUNTIME_TYPE_I256:
+        {
+            return ir_builtin_json_encode_i256(val);
         } break;
         case IR_RUNTIME_TYPE_BOOL:
         {
@@ -295,12 +305,14 @@ IR_BUILTIN_JSON_DECODE_INT_DECLARE(u16, uint16_t, 2, false)
 IR_BUILTIN_JSON_DECODE_INT_DECLARE(u32, uint32_t, 4, false)
 IR_BUILTIN_JSON_DECODE_INT_DECLARE(u64, uint64_t, 8, false)
 IR_BUILTIN_JSON_DECODE_INT_DECLARE(u128, uint128_t, 16, false)
+IR_BUILTIN_JSON_DECODE_INT_DECLARE(u256, uint256_t, 32, false)
 
 IR_BUILTIN_JSON_DECODE_INT_DECLARE(i8, int8_t, 1, true)
 IR_BUILTIN_JSON_DECODE_INT_DECLARE(i16, int16_t, 2, true)
 IR_BUILTIN_JSON_DECODE_INT_DECLARE(i32, int32_t, 4, true)
 IR_BUILTIN_JSON_DECODE_INT_DECLARE(i64, int64_t, 8, true)
 IR_BUILTIN_JSON_DECODE_INT_DECLARE(i128, int128_t, 16, true)
+IR_BUILTIN_JSON_DECODE_INT_DECLARE(i256, int256_t, 32, true)
 
 void *
 ir_builtin_json_decode_str(cJSON *obj)
@@ -432,14 +444,14 @@ ir_builtin_json_decode_map(uint32_t runtime_class_offset, cJSON *obj)
         char *key = elem->string;
         if (TABLE_KEY_IS_INT(ret)) {
             struct vector *int_str = vector_new(__strlen(key), 1, key);
-            if (ret->key_runtime_ty <= IR_RUNTIME_TYPE_U128) {
-                key = (int64_t)ir_builtin_str_to_u128(int_str);
+            if (ret->key_runtime_ty <= IR_RUNTIME_TYPE_U256) {
+                key = (char *)ir_builtin_str_to_u256(int_str);
             }
             else {
-                key = (int64_t)ir_builtin_str_to_i128(int_str);
+                key = (char *)ir_builtin_str_to_i256(int_str);
             }
         }
-        qhashtbl_put(ret, key, (void *)item,
+        qhashtbl_put(ret,(int64_t) key, (void *)item,
                      get_ir_type_size_as_element(value_ty));
     }
     return (void *)ret;
@@ -474,6 +486,10 @@ cjson_to_ir_type(uint32_t runtime_class_offset, cJSON *obj)
         {
             return ir_builtin_json_decode_u128(obj);
         } break;
+        case IR_RUNTIME_TYPE_U256:
+        {
+            return ir_builtin_json_decode_u256(obj);
+        } break;
         case IR_RUNTIME_TYPE_I8:
         {
             return ir_builtin_json_decode_i8(obj);
@@ -493,6 +509,10 @@ cjson_to_ir_type(uint32_t runtime_class_offset, cJSON *obj)
         case IR_RUNTIME_TYPE_I128:
         {
             return ir_builtin_json_decode_i128(obj);
+        } break;
+        case IR_RUNTIME_TYPE_I256:
+        {
+            return ir_builtin_json_decode_i256(obj);
         } break;
         case IR_RUNTIME_TYPE_BOOL:
         {
