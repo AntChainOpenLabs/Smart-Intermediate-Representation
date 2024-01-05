@@ -53,22 +53,22 @@ RUN yum install -y gcc-toolset-11 gcc-toolset-11-gcc-c++ gcc-toolset-11-make gcc
 RUN mkdir -p /opt
 WORKDIR /opt
 # COPY linux-x64/clang+llvm-14.0.6-x86_64-linux-gnu-rhel-8.4.tar.xz /opt/
-RUN wget https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/clang+llvm-14.0.6-x86_64-linux-gnu-rhel-8.4.tar.xz
-RUN tar -xvf clang+llvm-14.0.6-x86_64-linux-gnu-rhel-8.4.tar.xz
-RUN rm -rf clang+llvm-14.0.6-x86_64-linux-gnu-rhel-8.4.tar.xz
-RUN mv clang+llvm-14.0.6-x86_64-linux-gnu-rhel-8.4/ llvm14
-WORKDIR /opt/llvm14
-RUN echo "PATH=/opt/llvm14/bin:\$PATH" >> ~/.bash_profile
+RUN wget https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.0/clang+llvm-15.0.0-x86_64-linux-gnu-rhel-8.4.tar.xz
+RUN tar -xvf clang+llvm-15.0.0-x86_64-linux-gnu-rhel-8.4.tar.xz
+RUN rm -rf clang+llvm-15.0.0-x86_64-linux-gnu-rhel-8.4.tar.xz
+RUN mv clang+llvm-15.0.0-x86_64-linux-gnu-rhel-8.4/ llvm15
+WORKDIR /opt/llvm15
+RUN echo "PATH=/opt/llvm15/bin:\$PATH" >> ~/.bash_profile
 RUN source ~/.bash_profile
-ENV PATH=/opt/llvm14/bin:$PATH
-ENV LLVM_SYS_140_PREFIX=/opt/llvm14
+ENV PATH=/opt/llvm15/bin:$PATH
+ENV LLVM_SYS_150_PREFIX=/opt/llvm15
 
 
-# clang-14
+# clang-15
 # RUN yum -y install clang
 # RUN clang --version
 
-# llvm-14
+# llvm-15
 RUN yum -y install libffi-devel
 RUN yum install -y lld lld-devel zlib-devel
 RUN ln -s /usr/lib64/libtinfo.so.6 /usr/lib64/libtinfo.so
