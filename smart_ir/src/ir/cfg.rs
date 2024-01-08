@@ -7,6 +7,7 @@ use std::{fmt::Display, rc::Rc};
 use crate::ir::interface_type::PartialFuncName;
 use core::hash::Hash;
 use indexmap::IndexMap;
+use num_bigint::BigInt;
 use smart_ir_macro::MetaDataNode;
 
 use super::builder::{BasicBlockId, IdentifierId, MetaDataId};
@@ -58,11 +59,13 @@ pub enum IntLiteral {
     I32(i32),
     I64(i64),
     I128(i128),
+    I256(BigInt),
     U8(u8),
     U16(u16),
     U32(u32),
     U64(u64),
     U128(u128),
+    U256(BigInt),
 }
 impl Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -75,11 +78,13 @@ impl Display for Literal {
                 IntLiteral::I32(val) => write!(f, "{val}"),
                 IntLiteral::I64(val) => write!(f, "{val}"),
                 IntLiteral::I128(val) => write!(f, "{val}"),
+                IntLiteral::I256(val) => write!(f, "{val}"),
                 IntLiteral::U8(val) => write!(f, "{val}"),
                 IntLiteral::U16(val) => write!(f, "{val}"),
                 IntLiteral::U32(val) => write!(f, "{val}"),
                 IntLiteral::U64(val) => write!(f, "{val}"),
                 IntLiteral::U128(val) => write!(f, "{val}"),
+                IntLiteral::U256(val) => write!(f, "{val}"),
             },
         }
     }
@@ -96,11 +101,13 @@ impl Literal {
                 IntLiteral::I32(_) => Type::Primitive(PrimitiveType::Int(IntType::I32)),
                 IntLiteral::I64(_) => Type::Primitive(PrimitiveType::Int(IntType::I64)),
                 IntLiteral::I128(_) => Type::Primitive(PrimitiveType::Int(IntType::I128)),
+                IntLiteral::I256(_) => Type::Primitive(PrimitiveType::Int(IntType::I256)),
                 IntLiteral::U8(_) => Type::Primitive(PrimitiveType::Int(IntType::U8)),
                 IntLiteral::U16(_) => Type::Primitive(PrimitiveType::Int(IntType::U16)),
                 IntLiteral::U32(_) => Type::Primitive(PrimitiveType::Int(IntType::U32)),
                 IntLiteral::U64(_) => Type::Primitive(PrimitiveType::Int(IntType::U64)),
                 IntLiteral::U128(_) => Type::Primitive(PrimitiveType::Int(IntType::U128)),
+                IntLiteral::U256(_) => Type::Primitive(PrimitiveType::Int(IntType::U256)),
             },
         }
     }
@@ -466,11 +473,13 @@ impl Display for Type {
                     IntType::I32 => write!(f, "i32"),
                     IntType::I64 => write!(f, "i64"),
                     IntType::I128 => write!(f, "i128"),
+                    IntType::I256 => write!(f, "i256"),
                     IntType::U8 => write!(f, "u8"),
                     IntType::U16 => write!(f, "u16"),
                     IntType::U32 => write!(f, "u32"),
                     IntType::U64 => write!(f, "u64"),
                     IntType::U128 => write!(f, "u128"),
+                    IntType::U256 => write!(f, "u256"),
                 },
             },
             Type::Map { key, value } => write!(f, "{{{key}:{value}}}"),
@@ -523,11 +532,13 @@ pub enum IntType {
     I32,
     I64,
     I128,
+    I256,
     U8,
     U16,
     U32,
     U64,
     U128,
+    U256,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]

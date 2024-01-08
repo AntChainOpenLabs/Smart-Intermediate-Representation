@@ -5,7 +5,9 @@
 use inkwell::{types::BasicType, values::BasicValueEnum};
 
 use crate::ir::cfg::Type;
+use crate::ir_codegen::builtin_constants::Q_HASHTBL_ITER;
 use crate::ir_codegen::traits::{BaseTypeMethods, BuilderMethods};
+use crate::ir_codegen::ty::Q_MAP_LLVM_TY;
 use crate::ir_codegen::{
     builtin_constants::{Q_HASHTBL_OBJ_S, VECTOR_NEW_FUNC_NAME},
     context::IR2LLVMCodeGenContext,
@@ -28,22 +30,24 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             let key32: BasicValueEnum = self
                 .builder
                 .build_ptr_to_int(self.vector_bytes(key), self.i32_type().into_int_type(), "")
+                .unwrap()
                 .into();
             self.int_cast(key32, self.i64_type(), false)
         } else if key_ty.is_integer() {
             self.int_cast(key, self.i64_type(), false)
         } else {
-            let ptr = self.builder.build_alloca(key.get_type(), "");
-            self.builder.build_store(ptr, key);
+            let ptr = self.builder.build_alloca(key.get_type(), "").unwrap();
+            self.builder.build_store(ptr, key).unwrap();
             let key32: BasicValueEnum = self
                 .builder
                 .build_ptr_to_int(ptr, self.i32_type().into_int_type(), "")
+                .unwrap()
                 .into();
             self.int_cast(key32, self.i64_type(), false)
         };
 
-        let val_ptr = self.builder.build_alloca(val.get_type(), "");
-        self.builder.build_store(val_ptr, val);
+        let val_ptr = self.builder.build_alloca(val.get_type(), "").unwrap();
+        self.builder.build_store(val_ptr, val).unwrap();
 
         let entry_u8_ptr_value = self.ptr_cast(val_ptr.into(), self.i8_ptr_type());
 
@@ -75,16 +79,18 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             let key_i32: BasicValueEnum = self
                 .builder
                 .build_ptr_to_int(self.vector_bytes(key), self.i32_type().into_int_type(), "")
+                .unwrap()
                 .into();
             self.int_cast(key_i32, self.i64_type(), false)
         } else if key_ty.is_integer() {
             self.int_cast(key, self.i64_type(), false)
         } else {
-            let ptr = self.builder.build_alloca(key.get_type(), "");
-            self.builder.build_store(ptr, key);
+            let ptr = self.builder.build_alloca(key.get_type(), "").unwrap();
+            self.builder.build_store(ptr, key).unwrap();
             let key_i32: BasicValueEnum = self
                 .builder
                 .build_ptr_to_int(ptr, self.i32_type().into_int_type(), "")
+                .unwrap()
                 .into();
             self.int_cast(key_i32, self.i64_type(), false)
         };
@@ -97,10 +103,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             false,
         );
 
-        let value_llvm_ptr_ty = self.ptr_type_to(self.llvm_type(ret));
-        // the part of qhashtbl_get accepts value is a pointer points to actual value(i8*)
-        let value_ptr = self.ptr_cast(data.into(), value_llvm_ptr_ty);
-        self.builder.build_load(value_ptr.into_pointer_value(), "")
+        self.builder
+            .build_load(self.ptr_type_to(self.llvm_type(ret)), data, "")
+            .unwrap()
     }
 
     pub fn build_map_contains_key(
@@ -117,16 +122,18 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             let key_i32: BasicValueEnum = self
                 .builder
                 .build_ptr_to_int(self.vector_bytes(key), self.i32_type().into_int_type(), "")
+                .unwrap()
                 .into();
             self.int_cast(key_i32, self.i64_type(), false)
         } else if key_ty.is_integer() {
             self.int_cast(key, self.i64_type(), false)
         } else {
-            let ptr = self.builder.build_alloca(key.get_type(), "");
-            self.builder.build_store(ptr, key);
+            let ptr = self.builder.build_alloca(key.get_type(), "").unwrap();
+            self.builder.build_store(ptr, key).unwrap();
             let key_i32: BasicValueEnum = self
                 .builder
                 .build_ptr_to_int(ptr, self.i32_type().into_int_type(), "")
+                .unwrap()
                 .into();
             self.int_cast(key_i32, self.i64_type(), false)
         };
@@ -148,16 +155,18 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             let key_i32: BasicValueEnum = self
                 .builder
                 .build_ptr_to_int(self.vector_bytes(key), self.i32_type().into_int_type(), "")
+                .unwrap()
                 .into();
             self.int_cast(key_i32, self.i64_type(), false)
         } else if key_ty.is_integer() {
             self.int_cast(key, self.i64_type(), false)
         } else {
-            let ptr = self.builder.build_alloca(key.get_type(), "");
-            self.builder.build_store(ptr, key);
+            let ptr = self.builder.build_alloca(key.get_type(), "").unwrap();
+            self.builder.build_store(ptr, key).unwrap();
             let key_i32: BasicValueEnum = self
                 .builder
                 .build_ptr_to_int(ptr, self.i32_type().into_int_type(), "")
+                .unwrap()
                 .into();
             self.int_cast(key_i32, self.i64_type(), false)
         };
@@ -174,9 +183,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let map_ptr = *params.get(0).unwrap();
 
         let iter_size = self
-            .llvm_type(&Type::map_iter())
-            .into_pointer_type()
-            .get_element_type()
+            .llvm_context
+            .get_struct_type(Q_HASHTBL_ITER)
+            .unwrap()
             .size_of()
             .unwrap()
             .const_cast(self.i32_type().into_int_type(), false);
@@ -186,10 +195,15 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         let map_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 0, "")
+            .build_struct_gep(
+                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                0,
+                "",
+            )
             .unwrap();
 
-        self.builder.build_store(map_field, map_ptr);
+        self.builder.build_store(map_field, map_ptr).unwrap();
 
         let qhashtbl_obj_ty = self.module.get_struct_type(Q_HASHTBL_OBJ_S).unwrap();
         let malloc_ptr = self.build_call(
@@ -202,14 +216,19 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         );
 
         let obj_ptr = self.ptr_cast(malloc_ptr, self.ptr_type_to(qhashtbl_obj_ty.into()));
-        self.memset_struct_ptr(obj_ptr.into_pointer_value(), 0);
+        self.memset_struct_ptr(obj_ptr.into_pointer_value(), qhashtbl_obj_ty.into(), 0);
 
         let obj_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 1, "")
+            .build_struct_gep(
+                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                1,
+                "",
+            )
             .unwrap();
 
-        self.builder.build_store(obj_field, obj_ptr);
+        self.builder.build_store(obj_field, obj_ptr).unwrap();
 
         iter_ptr
     }
@@ -224,16 +243,40 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         let map_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 0, "")
+            .build_struct_gep(
+                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                0,
+                "",
+            )
             .unwrap();
-        let map_ptr = self.builder.build_load(map_field, "");
+        let map_ptr = self
+            .builder
+            .build_load(
+                self.llvm_context.get_struct_type(Q_MAP_LLVM_TY).unwrap(),
+                map_field,
+                "",
+            )
+            .unwrap();
 
         let obj_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 1, "")
+            .build_struct_gep(
+                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                1,
+                "",
+            )
             .unwrap();
 
-        let obj_ptr = self.builder.build_load(obj_field, "");
+        let obj_ptr = self
+            .builder
+            .build_load(
+                self.llvm_context.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
+                obj_field,
+                "",
+            )
+            .unwrap();
 
         self.build_hashtbl_getnext(
             map_ptr.into_pointer_value(),
@@ -252,17 +295,37 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         let obj_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 1, "")
+            .build_struct_gep(
+                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                1,
+                "",
+            )
             .unwrap();
 
-        let obj_ptr = self.builder.build_load(obj_field, "");
+        let obj_ptr = self
+            .builder
+            .build_load(
+                self.llvm_context.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
+                obj_field,
+                "",
+            )
+            .unwrap();
 
         let key_field = self
             .builder
-            .build_struct_gep(obj_ptr.into_pointer_value(), 1, "")
+            .build_struct_gep(
+                self.llvm_context.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
+                obj_ptr.into_pointer_value(),
+                1,
+                "",
+            )
             .unwrap();
 
-        let key_data = self.builder.build_load(key_field, "");
+        let key_data = self
+            .builder
+            .build_load(self.i64_type(), key_field, "")
+            .unwrap();
 
         if ret.is_string() {
             let key_bytes = self.int_to_ptr(key_data, self.i8_ptr_type());
@@ -278,6 +341,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                     self.llvm_type(ret).into_int_type(),
                     "",
                 )
+                .unwrap()
                 .into()
         }
     }
@@ -292,18 +356,43 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         let obj_field = self
             .builder
-            .build_struct_gep(iter_ptr.into_pointer_value(), 1, "")
+            .build_struct_gep(
+                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                iter_ptr.into_pointer_value(),
+                1,
+                "",
+            )
             .unwrap();
 
-        let obj_ptr = self.builder.build_load(obj_field, "");
+        let obj_ptr = self
+            .builder
+            .build_load(
+                self.llvm_context.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
+                obj_field,
+                "",
+            )
+            .unwrap();
 
         let value_field = self
             .builder
-            .build_struct_gep(obj_ptr.into_pointer_value(), 2, "")
+            .build_struct_gep(
+                self.llvm_context.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
+                obj_ptr.into_pointer_value(),
+                2,
+                "",
+            )
             .unwrap();
 
-        let value_byte = self.builder.build_load(value_field, "");
-        let value_ptr = self.ptr_cast(value_byte, self.ptr_type_to(self.llvm_type(ret)));
-        self.builder.build_load(value_ptr.into_pointer_value(), "")
+        let value_byte = self
+            .builder
+            .build_load(self.i8_ptr_type(), value_field, "")
+            .unwrap();
+        self.builder
+            .build_load(
+                self.ptr_type_to(self.llvm_type(ret)),
+                value_byte.into_pointer_value(),
+                "",
+            )
+            .unwrap()
     }
 }

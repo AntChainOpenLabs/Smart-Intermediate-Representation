@@ -21,7 +21,7 @@ use crate::ir_codegen::traits::BuilderMethods;
 
 use super::{
     builtin_constants::{MEMCMP_FUNC, Q_MAP_NEW_FUNC_NAME, VECTOR_NEW_FUNC_NAME},
-    context::{CompileResult, IR2LLVMCodeGenContext},
+    context::{CodeGenError, CompileResult, IR2LLVMCodeGenContext},
     error::FUNCTION_RETURN_VALUE_NOT_FOUND_MSG,
 };
 
@@ -50,7 +50,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 };
 
                 let ptr = self.build_or_get_variable(&name, &var_ty);
-                self.builder.build_store(ptr, init_val);
+                self.builder.build_store(ptr, init_val).unwrap();
                 self.ok_result()
             }
             InstrDescription::Assignment { id, val } => {
@@ -61,7 +61,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                     .get_variable_ptr(&name)
                     .unwrap_or_else(|| panic!("can't find variable %{name}"));
 
-                self.builder.build_store(ptr, val);
+                self.builder.build_store(ptr, val).unwrap();
 
                 self.ok_result()
             }
@@ -100,12 +100,12 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             } => unimplemented!(),
             InstrDescription::Not { op } => {
                 let op = self.walk_ir_expr(op)?;
-                let res = self.builder.build_not(op.into_int_value(), "");
+                let res = self.builder.build_not(op.into_int_value(), "").unwrap();
                 Ok(res.into())
             }
             InstrDescription::BitNot { op } => {
                 let op = self.walk_ir_expr(op)?;
-                let res = self.builder.build_not(op.into_int_value(), "");
+                let res = self.builder.build_not(op.into_int_value(), "").unwrap();
                 Ok(res.into())
             }
             InstrDescription::Binary { op_code, op1, op2 } => {
@@ -131,124 +131,132 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 let res: BasicValueEnum = match op_code {
                     BinaryOp::Add => {
                         if expr_ty.is_signed_int() {
-                            self.builder.build_int_nsw_add(
-                                left.into_int_value(),
-                                right.into_int_value(),
-                                "",
-                            )
+                            self.builder
+                                .build_int_nsw_add(
+                                    left.into_int_value(),
+                                    right.into_int_value(),
+                                    "",
+                                )
+                                .unwrap()
                         } else {
-                            self.builder.build_int_add(
-                                left.into_int_value(),
-                                right.into_int_value(),
-                                "",
-                            )
+                            self.builder
+                                .build_int_add(left.into_int_value(), right.into_int_value(), "")
+                                .unwrap()
                         }
                     }
                     BinaryOp::Sub => {
                         if expr_ty.is_signed_int() {
-                            self.builder.build_int_nsw_sub(
-                                left.into_int_value(),
-                                right.into_int_value(),
-                                "",
-                            )
+                            self.builder
+                                .build_int_nsw_sub(
+                                    left.into_int_value(),
+                                    right.into_int_value(),
+                                    "",
+                                )
+                                .unwrap()
                         } else {
-                            self.builder.build_int_sub(
-                                left.into_int_value(),
-                                right.into_int_value(),
-                                "",
-                            )
+                            self.builder
+                                .build_int_sub(left.into_int_value(), right.into_int_value(), "")
+                                .unwrap()
                         }
                     }
                     BinaryOp::Mul => {
                         if expr_ty.is_signed_int() {
-                            self.builder.build_int_nsw_mul(
-                                left.into_int_value(),
-                                right.into_int_value(),
-                                "",
-                            )
+                            self.builder
+                                .build_int_nsw_mul(
+                                    left.into_int_value(),
+                                    right.into_int_value(),
+                                    "",
+                                )
+                                .unwrap()
                         } else {
-                            self.builder.build_int_mul(
-                                left.into_int_value(),
-                                right.into_int_value(),
-                                "",
-                            )
+                            self.builder
+                                .build_int_mul(left.into_int_value(), right.into_int_value(), "")
+                                .unwrap()
                         }
                     }
                     BinaryOp::Div => {
                         if expr_ty.is_signed_int() {
-                            self.builder.build_int_signed_div(
-                                left.into_int_value(),
-                                right.into_int_value(),
-                                "",
-                            )
+                            self.builder
+                                .build_int_signed_div(
+                                    left.into_int_value(),
+                                    right.into_int_value(),
+                                    "",
+                                )
+                                .unwrap()
                         } else {
-                            self.builder.build_int_unsigned_div(
-                                left.into_int_value(),
-                                right.into_int_value(),
-                                "",
-                            )
+                            self.builder
+                                .build_int_unsigned_div(
+                                    left.into_int_value(),
+                                    right.into_int_value(),
+                                    "",
+                                )
+                                .unwrap()
                         }
                     }
                     BinaryOp::Mod => {
                         if expr_ty.is_signed_int() {
-                            self.builder.build_int_signed_rem(
-                                left.into_int_value(),
-                                right.into_int_value(),
-                                "",
-                            )
+                            self.builder
+                                .build_int_signed_rem(
+                                    left.into_int_value(),
+                                    right.into_int_value(),
+                                    "",
+                                )
+                                .unwrap()
                         } else {
-                            self.builder.build_int_unsigned_rem(
-                                left.into_int_value(),
-                                right.into_int_value(),
-                                "",
-                            )
+                            self.builder
+                                .build_int_unsigned_rem(
+                                    left.into_int_value(),
+                                    right.into_int_value(),
+                                    "",
+                                )
+                                .unwrap()
                         }
                     }
                     BinaryOp::Exp => self
                         .build_pow(left.into_int_value(), right.into_int_value(), &expr_ty)
                         .into_int_value(),
-                    BinaryOp::And => {
-                        self.builder
-                            .build_and(left.into_int_value(), right.into_int_value(), "")
-                    }
+                    BinaryOp::And => self
+                        .builder
+                        .build_and(left.into_int_value(), right.into_int_value(), "")
+                        .unwrap(),
 
-                    BinaryOp::BitAnd => {
-                        self.builder
-                            .build_and(left.into_int_value(), right.into_int_value(), "")
-                    }
+                    BinaryOp::BitAnd => self
+                        .builder
+                        .build_and(left.into_int_value(), right.into_int_value(), "")
+                        .unwrap(),
 
-                    BinaryOp::Or => {
-                        self.builder
-                            .build_or(left.into_int_value(), right.into_int_value(), "")
-                    }
+                    BinaryOp::Or => self
+                        .builder
+                        .build_or(left.into_int_value(), right.into_int_value(), "")
+                        .unwrap(),
 
-                    BinaryOp::BitOr => {
-                        self.builder
-                            .build_or(left.into_int_value(), right.into_int_value(), "")
-                    }
+                    BinaryOp::BitOr => self
+                        .builder
+                        .build_or(left.into_int_value(), right.into_int_value(), "")
+                        .unwrap(),
 
-                    BinaryOp::BitXor => {
-                        self.builder
-                            .build_xor(left.into_int_value(), right.into_int_value(), "")
-                    }
+                    BinaryOp::BitXor => self
+                        .builder
+                        .build_xor(left.into_int_value(), right.into_int_value(), "")
+                        .unwrap(),
 
-                    BinaryOp::Shl => self.builder.build_left_shift(
-                        left.into_int_value(),
-                        right.into_int_value(),
-                        "",
-                    ),
-                    BinaryOp::Shr => self.builder.build_right_shift(
-                        left.into_int_value(),
-                        right.into_int_value(),
-                        expr_ty.is_signed_int(),
-                        "",
-                    ),
-                    BinaryOp::Sar => self.builder.build_right_shift(
-                        left.into_int_value(),
-                        right.into_int_value(),
-                        true,
-                        "",
-                    ),
+                    BinaryOp::Shl => self
+                        .builder
+                        .build_left_shift(left.into_int_value(), right.into_int_value(), "")
+                        .unwrap(),
+                    BinaryOp::Shr => self
+                        .builder
+                        .build_right_shift(
+                            left.into_int_value(),
+                            right.into_int_value(),
+                            expr_ty.is_signed_int(),
+                            "",
+                        )
+                        .unwrap(),
+                    BinaryOp::Sar => self
+                        .builder
+                        .build_right_shift(left.into_int_value(), right.into_int_value(), true, "")
+                        .unwrap(),
                 }
                 .into();
                 Ok(res)
@@ -304,6 +312,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                             right.into_int_value(),
                             "",
                         )
+                        .unwrap()
                         .into()
                 } else if expr_ty.is_string() {
                     let left_bytes = self.vector_bytes(left);
@@ -338,6 +347,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                                     i1_type.const_all_ones(),
                                     "",
                                 )
+                                .unwrap()
                                 .into()
                         }
                         _ => unreachable!(),
@@ -379,21 +389,57 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             InstrDescription::GetField {
                 ptr,
                 field_path,
-                field_ty: _,
+                field_ty,
             } => {
+                let ptr_ty = self
+                    .ir_context
+                    .ir_expr_ty(self.current_function.borrow().as_ref().unwrap(), ptr);
                 let mut ptr = self.walk_ir_expr(ptr)?;
-                for (i, field_idx) in field_path.iter().enumerate() {
-                    let field_ptr = self
-                        .builder
-                        .build_struct_gep(ptr.into_pointer_value(), *field_idx, "")
-                        .unwrap();
-                    if i + 1 < field_path.len() {
-                        ptr = self.builder.build_load(field_ptr, "");
-                    } else {
-                        ptr = field_ptr.into();
+                if let Some(Type::Pointer(pointee_ty)) = ptr_ty {
+                    let mut struct_ty = pointee_ty;
+                    for (i, field_idx) in field_path.iter().enumerate() {
+                        if let Type::Def(def_ty) = struct_ty.as_ref() {
+                            let field_ptr = self
+                                .builder
+                                .build_struct_gep(
+                                    self.llvm_type(&def_ty.ty),
+                                    ptr.into_pointer_value(),
+                                    *field_idx,
+                                    "",
+                                )
+                                .unwrap();
+                            if i + 1 < field_path.len() {
+                                if let Type::Compound(fields) = def_ty.ty.as_ref() {
+                                    struct_ty = fields.get(*field_idx as usize).unwrap().ty.clone();
+                                    ptr = self
+                                        .builder
+                                        .build_load(self.llvm_type(&struct_ty), field_ptr, "")
+                                        .unwrap();
+                                } else {
+                                    return Err(CodeGenError {
+                                        message: "wrong type defination".to_string(),
+                                    });
+                                }
+                            } else {
+                                ptr = field_ptr.into();
+                            }
+                        } else {
+                            return Err(CodeGenError {
+                                message:
+                                    "try to get field from a pointer whose elemet isn't a struct"
+                                        .to_string(),
+                            });
+                        }
                     }
-                }
-                let res = self.builder.build_load(ptr.into_pointer_value(), "");
+                } else {
+                    return Err(CodeGenError {
+                        message: "try to get field from value which isn't a pointer".to_string(),
+                    });
+                };
+                let res = self
+                    .builder
+                    .build_load(self.llvm_type(field_ty), ptr.into_pointer_value(), "")
+                    .unwrap();
                 Ok(res)
             }
             InstrDescription::SetField {
@@ -401,21 +447,58 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 val,
                 field_path,
             } => {
+                let ptr_ty = self
+                    .ir_context
+                    .ir_expr_ty(self.current_function.borrow().as_ref().unwrap(), ptr);
                 let mut ptr = self.walk_ir_expr(ptr)?;
                 let val = self.walk_ir_expr(val)?;
-                for (i, field_idx) in field_path.iter().enumerate() {
-                    let field_ptr = self
-                        .builder
-                        .build_struct_gep(ptr.into_pointer_value(), *field_idx, "")
-                        .unwrap();
-                    if i + 1 < field_path.len() {
-                        ptr = self.builder.build_load(field_ptr, "");
-                    } else {
-                        ptr = field_ptr.into();
+
+                if let Some(Type::Pointer(pointee_ty)) = ptr_ty {
+                    let mut struct_ty = pointee_ty;
+                    for (i, field_idx) in field_path.iter().enumerate() {
+                        if let Type::Def(def_ty) = struct_ty.as_ref() {
+                            let field_ptr = self
+                                .builder
+                                .build_struct_gep(
+                                    self.llvm_type(&struct_ty),
+                                    ptr.into_pointer_value(),
+                                    *field_idx,
+                                    "",
+                                )
+                                .unwrap();
+                            if i + 1 < field_path.len() {
+                                if let Type::Compound(fields) = def_ty.ty.as_ref() {
+                                    struct_ty = fields.get(*field_idx as usize).unwrap().ty.clone();
+                                    ptr = self
+                                        .builder
+                                        .build_load(self.llvm_type(&struct_ty), field_ptr, "")
+                                        .unwrap();
+                                } else {
+                                    return Err(CodeGenError {
+                                        message: "wrong type defination".to_string(),
+                                    });
+                                }
+                            } else {
+                                ptr = field_ptr.into();
+                            }
+                        } else {
+                            return Err(CodeGenError {
+                                message:
+                                    "try to get field from a pointer whose elemet isn't a struct"
+                                        .to_string(),
+                            });
+                        }
                     }
+
+                    self.builder
+                        .build_store(ptr.into_pointer_value(), val)
+                        .unwrap();
+                    self.ok_result()
+                } else {
+                    Err(CodeGenError {
+                        message: "try to set field to value which isn't a pointer".to_string(),
+                    })
                 }
-                self.builder.build_store(ptr.into_pointer_value(), val);
-                self.ok_result()
             }
             InstrDescription::GetStoragePath { storage_path } => {
                 let md = StoragePathExtraArgs::get_from_context(self.ir_context, instr).unwrap();
@@ -506,12 +589,13 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                             ret_ty,
                         );
                         if ret_ty.is_void() {
-                            self.builder.build_call(func, args.as_slice(), "");
+                            self.builder.build_call(func, args.as_slice(), "").unwrap();
                             self.ok_result()
                         } else {
                             let ret_val = self
                                 .builder
                                 .build_call(func, args.as_slice(), "")
+                                .unwrap()
                                 .try_as_basic_value()
                                 .left()
                                 .unwrap_or_else(|| {
@@ -541,6 +625,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                         self.llvm_type(target_ty).into_int_type(),
                         "",
                     )
+                    .unwrap()
                     .into();
                 Ok(ret)
             }
@@ -554,8 +639,11 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 let ptr = self
                     .get_variable_ptr(&name)
                     .unwrap_or_else(|| panic!("can't find variable %{name}"));
+                let ty = self
+                    .get_variable_ty(&name)
+                    .unwrap_or_else(|| panic!("can't find variable %{name}"));
 
-                let res = self.builder.build_load(ptr, "");
+                let res = self.builder.build_load(ty, ptr, "").unwrap();
                 Ok(res)
             }
             Expr::Instr(instr) => self.walk_instr(instr),
@@ -582,11 +670,13 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                             IntLiteral::I32(val) => val.to_string(),
                             IntLiteral::I64(val) => val.to_string(),
                             IntLiteral::I128(val) => val.to_string(),
+                            IntLiteral::I256(val) => val.to_string(),
                             IntLiteral::U8(val) => val.to_string(),
                             IntLiteral::U16(val) => val.to_string(),
                             IntLiteral::U32(val) => val.to_string(),
                             IntLiteral::U64(val) => val.to_string(),
                             IntLiteral::U128(val) => val.to_string(),
+                            IntLiteral::U256(val) => val.to_string(),
                         };
 
                         self.llvm_type(&lit_ty)

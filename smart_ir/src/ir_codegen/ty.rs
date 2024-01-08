@@ -6,7 +6,7 @@ use inkwell::types::{BasicType, BasicTypeEnum, FunctionType, VoidType};
 use inkwell::values::BasicValueEnum;
 
 use super::builtin_constants::{
-    Q_HASHTBL_OBJ_S, Q_MAP_NEW_FUNC_NAME, Q_VECTOR_OBJ_S, Q_VEC_NEW_FUNC_NAME,
+    Q_HASHTBL_ITER, Q_MAP_NEW_FUNC_NAME, Q_VECTOR_ITER, Q_VEC_NEW_FUNC_NAME,
     RUNTIME_CONTEXT_LLVM_TY, VECTOR_NEW_FUNC_NAME,
 };
 use super::context::IR2LLVMCodeGenContext;
@@ -17,9 +17,9 @@ use crate::ir_codegen::traits::{BaseTypeMethods, BuilderMethods};
 use crate::ir::cfg::{BuiltinType, FunctionDefinition, IntType, PrimitiveType, Type};
 use crate::ir::metadata::ssz_info::SSZInfo;
 
-const VEC_LLVM_TY: &str = "struct.vector";
-const Q_VEC_LLVM_TY: &str = "struct.qvector_s";
-const Q_MAP_LLVM_TY: &str = "struct.qhashtbl_s";
+pub const VEC_LLVM_TY: &str = "struct.vector";
+pub const Q_VEC_LLVM_TY: &str = "struct.qvector_s";
+pub const Q_MAP_LLVM_TY: &str = "struct.qhashtbl_s";
 
 /// Impl TypedResultWalker for LLVMCodeGenContext to visit AST nodes to emit LLVM IR.
 impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
@@ -36,11 +36,13 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                     IntType::I32 => self.i32_type(),
                     IntType::I64 => self.i64_type(),
                     IntType::I128 => self.llvm_context.i128_type().into(),
+                    IntType::I256 => self.llvm_context.custom_width_int_type(256).into(),
                     IntType::U8 => self.i8_type(),
                     IntType::U16 => self.llvm_context.i16_type().into(),
                     IntType::U32 => self.i32_type(),
                     IntType::U64 => self.i64_type(),
                     IntType::U128 => self.llvm_context.i128_type().into(),
+                    IntType::U256 => self.llvm_context.custom_width_int_type(256).into(),
                 },
             },
             Type::Map { key: _, value: _ } => self.ptr_type_to(
@@ -68,67 +70,19 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             Type::Pointer(ptr) => self.ptr_type_to(self.llvm_type(ptr)),
             Type::Def(def) => self.llvm_type(&def.ty),
             Type::Builtin(builtin_ty) => match builtin_ty {
-                BuiltinType::VectorIter =>
-                /*
-                   struct.vector.iter {
-                       struct.qvector_s* vec,
-                       struct.qvector_obj_s* obj,
-                   }
-                */
-                {
-                    self.ptr_type_to(
-                        self.llvm_context
-                            .struct_type(
-                                &[
-                                    self.ptr_type_to(
-                                        self.module
-                                            .get_struct_type(Q_VEC_LLVM_TY)
-                                            .expect(INTERNAL_ERROR_MSG)
-                                            .into(),
-                                    ),
-                                    self.ptr_type_to(
-                                        self.module
-                                            .get_struct_type(Q_VECTOR_OBJ_S)
-                                            .expect(INTERNAL_ERROR_MSG)
-                                            .into(),
-                                    ),
-                                ],
-                                true,
-                            )
-                            .into(),
-                    )
-                }
+                BuiltinType::VectorIter => self.ptr_type_to(
+                    self.module
+                        .get_struct_type(Q_VECTOR_ITER)
+                        .expect(INTERNAL_ERROR_MSG)
+                        .into(),
+                ),
 
-                BuiltinType::MapIter =>
-                /*
-                   struct.map.iter {
-                       struct.qhashtbl_s* map,
-                       struct.qhashtbl_obj_s* obj,
-                   }
-                */
-                {
-                    self.ptr_type_to(
-                        self.llvm_context
-                            .struct_type(
-                                &[
-                                    self.ptr_type_to(
-                                        self.module
-                                            .get_struct_type(Q_MAP_LLVM_TY)
-                                            .expect(INTERNAL_ERROR_MSG)
-                                            .into(),
-                                    ),
-                                    self.ptr_type_to(
-                                        self.module
-                                            .get_struct_type(Q_HASHTBL_OBJ_S)
-                                            .expect(INTERNAL_ERROR_MSG)
-                                            .into(),
-                                    ),
-                                ],
-                                true,
-                            )
-                            .into(),
-                    )
-                }
+                BuiltinType::MapIter => self.ptr_type_to(
+                    self.module
+                        .get_struct_type(Q_HASHTBL_ITER)
+                        .expect(INTERNAL_ERROR_MSG)
+                        .into(),
+                ),
                 BuiltinType::Parampack => self.vec_ptr_type(),
                 BuiltinType::StoragePath => self.i32_type(),
             },
@@ -202,17 +156,21 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 let ptr = self.ptr_cast(s.into(), self.ptr_type_to(llvm_ty));
                 for (i, field_ty) in fields.iter().enumerate() {
                     let field = unsafe {
-                        self.builder.build_gep(
-                            ptr.into_pointer_value(),
-                            &[
-                                self.llvm_context.i32_type().const_zero(),
-                                self.llvm_context.i32_type().const_int(i as u64, false),
-                            ],
-                            "",
-                        )
+                        self.builder
+                            .build_gep(
+                                ptr.get_type(),
+                                ptr.into_pointer_value(),
+                                &[
+                                    self.llvm_context.i32_type().const_zero(),
+                                    self.llvm_context.i32_type().const_int(i as u64, false),
+                                ],
+                                "",
+                            )
+                            .unwrap()
                     };
                     self.builder
-                        .build_store(field, self.type_default_value(&field_ty.ty));
+                        .build_store(field, self.type_default_value(&field_ty.ty))
+                        .unwrap();
                 }
                 ptr
             }
@@ -220,7 +178,8 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             Type::Builtin(_) => unimplemented!(),
             _ => {
                 self.builder
-                    .build_store(s, self.type_default_value(elem_ty));
+                    .build_store(s, self.type_default_value(elem_ty))
+                    .unwrap();
                 s.into()
             }
         }

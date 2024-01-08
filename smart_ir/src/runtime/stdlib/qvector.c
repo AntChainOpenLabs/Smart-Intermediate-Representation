@@ -80,6 +80,7 @@
 #include "./stdlib.h"
 #include "./qinternal.h"
 #include "./qvector.h"
+#include "./qstring.h"
 
 #ifndef _DOXGEN_SKIP
 

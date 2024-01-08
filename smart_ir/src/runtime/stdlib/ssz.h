@@ -52,6 +52,11 @@ extern int32_t
 ssz_decode_u128(uint128_t *v, uint8_t *buf);
 
 extern int32_t
+ssz_encode_u256(uint256_t v, uint8_t *buf, int32_t offset);
+extern int32_t
+ssz_decode_u256(uint256_t *v, uint8_t *buf);
+
+extern int32_t
 ssz_encode_i8(int8_t v, uint8_t *buf, int32_t offset);
 extern int32_t
 ssz_decode_i8(int8_t *v, uint8_t *buf);
@@ -75,6 +80,11 @@ extern int32_t
 ssz_encode_i128(int128_t v, uint8_t *buf, int32_t offset);
 extern int32_t
 ssz_decode_i128(int128_t *v, uint8_t *buf);
+
+extern int32_t
+ssz_encode_i256(int256_t v, uint8_t *buf, int32_t offset);
+extern int32_t
+ssz_decode_i256(int256_t *v, uint8_t *buf);
 
 extern int32_t
 ssz_encode_str(const struct vector *v, uint8_t *buf, int32_t hdr_offset,

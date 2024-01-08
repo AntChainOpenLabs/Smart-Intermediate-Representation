@@ -101,9 +101,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         let ret_val = intrinsic_builder(self, func.get_params().as_slice(), params, ret);
         if ret.is_void() {
-            self.builder.build_return(None);
+            self.builder.build_return(None).unwrap();
         } else {
-            self.builder.build_return(Some(&ret_val));
+            self.builder.build_return(Some(&ret_val)).unwrap();
         }
 
         if let Some(pre_bb) = pre_bb {

@@ -24,11 +24,14 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let elem_ty = params_ty.get(1).unwrap();
 
         let (value_ptr, value_length) = self.ssz_encode_with_version(elem_ty, None, val);
-        let storage_path_ptr = self.builder.build_int_to_ptr(
-            storage_path.into_int_value(),
-            self.storage_path_ptr_type().into_pointer_type(),
-            "",
-        );
+        let storage_path_ptr = self
+            .builder
+            .build_int_to_ptr(
+                storage_path.into_int_value(),
+                self.storage_path_ptr_type().into_pointer_type(),
+                "",
+            )
+            .unwrap();
 
         let size_path_ptr = self.build_call(
             "storage_path_join_must_immut_string",
@@ -39,11 +42,14 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             ],
         );
 
-        let size_path = self.builder.build_ptr_to_int(
-            size_path_ptr.into_pointer_value(),
-            self.i32_type().into_int_type(),
-            "",
-        );
+        let size_path = self
+            .builder
+            .build_ptr_to_int(
+                size_path_ptr.into_pointer_value(),
+                self.i32_type().into_int_type(),
+                "",
+            )
+            .unwrap();
 
         self.build_void_call(
             "builtin_storage_array_push",
@@ -59,11 +65,14 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         _ret: &Type,
     ) -> BasicValueEnum<'ctx> {
         let storage_path = *params.get(0).unwrap();
-        let storage_path_ptr = self.builder.build_int_to_ptr(
-            storage_path.into_int_value(),
-            self.storage_path_ptr_type().into_pointer_type(),
-            "",
-        );
+        let storage_path_ptr = self
+            .builder
+            .build_int_to_ptr(
+                storage_path.into_int_value(),
+                self.storage_path_ptr_type().into_pointer_type(),
+                "",
+            )
+            .unwrap();
         let size_path_ptr = self.build_call(
             "storage_path_join_must_immut_string",
             &[
@@ -72,11 +81,14 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 self.i32_value(4),
             ],
         );
-        let size_path = self.builder.build_ptr_to_int(
-            size_path_ptr.into_pointer_value(),
-            self.i32_type().into_int_type(),
-            "",
-        );
+        let size_path = self
+            .builder
+            .build_ptr_to_int(
+                size_path_ptr.into_pointer_value(),
+                self.i32_type().into_int_type(),
+                "",
+            )
+            .unwrap();
 
         self.build_void_call(
             "builtin_storage_array_pop",
@@ -92,11 +104,14 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         _ret: &Type,
     ) -> BasicValueEnum<'ctx> {
         let storage_path = *params.get(0).unwrap();
-        let storage_path_ptr = self.builder.build_int_to_ptr(
-            storage_path.into_int_value(),
-            self.storage_path_ptr_type().into_pointer_type(),
-            "",
-        );
+        let storage_path_ptr = self
+            .builder
+            .build_int_to_ptr(
+                storage_path.into_int_value(),
+                self.storage_path_ptr_type().into_pointer_type(),
+                "",
+            )
+            .unwrap();
         let size_path_ptr = self.build_call(
             "storage_path_join_must_immut_string",
             &[
@@ -167,6 +182,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 self.i32_value(DATA_EMPTY_LENGTH as u64).into_int_value(),
                 "",
             )
+            .unwrap()
             .into()
     }
 
@@ -217,11 +233,14 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
     ) -> BasicValueEnum<'ctx> {
         let storage_path = *params.get(0).unwrap();
         let index = *params.get(1).unwrap();
-        let storage_path_ptr = self.builder.build_int_to_ptr(
-            storage_path.into_int_value(),
-            self.storage_path_ptr_type().into_pointer_type(),
-            "",
-        );
+        let storage_path_ptr = self
+            .builder
+            .build_int_to_ptr(
+                storage_path.into_int_value(),
+                self.storage_path_ptr_type().into_pointer_type(),
+                "",
+            )
+            .unwrap();
 
         let size_path_ptr = self.build_call(
             "storage_path_join_must_immut_string",
@@ -255,6 +274,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 self.i32_value(DATA_EMPTY_LENGTH as u64).into_int_value(),
                 "",
             )
+            .unwrap()
             .into()
     }
 

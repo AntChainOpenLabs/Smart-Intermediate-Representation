@@ -62,6 +62,9 @@ void ir_builtin_print_type(uint32_t runtime_class_offset)
         case IR_RUNTIME_TYPE_U128: {
             println("u128", 4);
         } break;
+        case IR_RUNTIME_TYPE_U256: {
+            println("i256", 4);
+        } break;
         case IR_RUNTIME_TYPE_I8: {
             println("i8", 2);
         } break;
@@ -76,6 +79,9 @@ void ir_builtin_print_type(uint32_t runtime_class_offset)
         } break;
         case IR_RUNTIME_TYPE_I128: {
             println("i128", 4);
+        } break;
+        case IR_RUNTIME_TYPE_I256: {
+            println("i256", 4);
         } break;
         case IR_RUNTIME_TYPE_BOOL: {
             println("bool", 4);
@@ -93,7 +99,7 @@ void ir_builtin_print_type(uint32_t runtime_class_offset)
                 struct vector *fields_name_ptr = (struct vector *)(all_runtimes_classes_address + fields_name_offset);
                 uint32_t fields_name_bytes_offset = (uint32_t)fields_name_ptr->data;
                 uint32_t field_name_bytes = all_runtimes_classes_address + fields_name_bytes_offset;
-                println(field_name_bytes, fields_name_ptr->len);
+                println((const char *)field_name_bytes, fields_name_ptr->len);
                 uint32_t field_offset = fields_offsets_array[i];
                 ir_builtin_print_type(field_offset);
             }
@@ -108,7 +114,7 @@ void ir_builtin_print_type(uint32_t runtime_class_offset)
                 struct vector *fields_name_ptr = (struct vector *)(all_runtimes_classes_address + fields_name_offset);
                 uint32_t fields_name_bytes_offset = (uint32_t)fields_name_ptr->data;
                 int32_t field_name_bytes = all_runtimes_classes_address + fields_name_bytes_offset;
-                println(field_name_bytes, fields_name_ptr->len);
+                println((const char *)field_name_bytes, fields_name_ptr->len);
                 uint32_t field_offset = fields_offsets_array[i];
                 ir_builtin_print_type(field_offset);
             }
@@ -118,7 +124,7 @@ void ir_builtin_print_type(uint32_t runtime_class_offset)
                 println("array", 5);
                 println("size:", 5);
                 char *array_size = builtin_i32_toa(runtime_class->array_size, 10);
-                println((int32_t)array_size, __strlen(array_size));
+                println(array_size, __strlen(array_size));
             } else {
                 println("vector", 6);
             }
@@ -162,6 +168,9 @@ get_ir_type_size_as_element(struct IRRuntimeClass *runtime_class)
         case IR_RUNTIME_TYPE_U128: {
             return 16;
         } break;
+        case IR_RUNTIME_TYPE_U256: {
+            return 32;
+        } break;
         case IR_RUNTIME_TYPE_I8: {
             return 1;
         } break;
@@ -176,6 +185,9 @@ get_ir_type_size_as_element(struct IRRuntimeClass *runtime_class)
         } break;
         case IR_RUNTIME_TYPE_I128: {
             return 16;
+        } break;
+        case IR_RUNTIME_TYPE_I256: {
+            return 32;
         } break;
         case IR_RUNTIME_TYPE_BOOL: {
             return 1;
@@ -220,6 +232,9 @@ size_t calculate_ir_type_size(struct IRRuntimeClass *runtime_class) {
         case IR_RUNTIME_TYPE_U128: {
             return 16;
         } break;
+        case IR_RUNTIME_TYPE_U256: {
+            return 32;
+        } break;
         case IR_RUNTIME_TYPE_I8: {
             return 1;
         } break;
@@ -234,6 +249,9 @@ size_t calculate_ir_type_size(struct IRRuntimeClass *runtime_class) {
         } break;
         case IR_RUNTIME_TYPE_I128: {
             return 16;
+        } break;
+        case IR_RUNTIME_TYPE_I256: {
+            return 32;
         } break;
         case IR_RUNTIME_TYPE_BOOL: {
             return 1;
@@ -307,6 +325,11 @@ ir_builtin_create_ir_value(uint32_t runtime_class_offset)
             __memset(value, sizeof(uint64_t[2]), 0);
             return (void*) value;
         } break;
+         case IR_RUNTIME_TYPE_U256: {
+            uint64_t* value = (uint64_t*) __malloc(sizeof(uint64_t[4]));
+            __memset(value, sizeof(uint64_t[4]), 0);
+             return (void*) value;
+        } break;
         case IR_RUNTIME_TYPE_I8: {
             return (void*) 0;
         } break;
@@ -324,6 +347,11 @@ ir_builtin_create_ir_value(uint32_t runtime_class_offset)
             uint64_t* value = (uint64_t*) __malloc(sizeof(uint64_t[2]));
             __memset(value, sizeof(uint64_t[2]), 0);
             return (void*) value;
+        } break;
+        case IR_RUNTIME_TYPE_I256: {
+            uint64_t* value = (uint64_t*) __malloc(sizeof(uint64_t[4]));
+            __memset(value, sizeof(uint64_t[4]), 0);
+             return (void*) value;
         } break;
         case IR_RUNTIME_TYPE_BOOL: {
             return (void*) 0;
@@ -417,6 +445,9 @@ is_pointer_type(uint32_t runtime_class_offset)
         {
             return false; // pointer
         } break;
+        case IR_RUNTIME_TYPE_U256: {
+            return false; // pointer
+        } break;
         case IR_RUNTIME_TYPE_I8:
         {
             return false;
@@ -435,6 +466,9 @@ is_pointer_type(uint32_t runtime_class_offset)
         } break;
         case IR_RUNTIME_TYPE_I128:
         {
+            return false; // pointer
+        } break;
+        case IR_RUNTIME_TYPE_I256: {
             return false; // pointer
         } break;
         case IR_RUNTIME_TYPE_BOOL:

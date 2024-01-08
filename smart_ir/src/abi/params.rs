@@ -5,6 +5,7 @@
 #[allow(unused_imports)]
 use anyhow::{anyhow, Result};
 use nano_leb128::ULEB128;
+use num_bigint::BigInt;
 #[allow(unused_imports)]
 use num_traits::FromPrimitive;
 use std::collections::HashMap;
@@ -30,6 +31,8 @@ pub enum ABIParam {
     I64(i64),
     U128(u128),
     I128(i128),
+    U256(BigInt),
+    I256(BigInt),
     Bool(bool),
     Str(String),
     Parampack(Vec<u8>),
@@ -45,6 +48,8 @@ pub enum ABIParam {
     I64Array(Vec<i64>),
     U128Array(Vec<u128>),
     I128Array(Vec<i128>),
+    U256Array(Vec<BigInt>),
+    I256Array(Vec<BigInt>),
     BoolArray(Vec<bool>),
     StrArray(Vec<String>),
 
@@ -59,6 +64,8 @@ pub enum ABIParam {
     StrI64Map(HashMap<String, i64>),
     StrU128Map(HashMap<String, u128>),
     StrI128Map(HashMap<String, i128>),
+    StrU256Map(HashMap<String, BigInt>),
+    StrI256Map(HashMap<String, BigInt>),
     StrBoolMap(HashMap<String, bool>),
     StrStrMap(HashMap<String, String>),
 }
@@ -157,6 +164,8 @@ impl ABIParam {
             ABIParam::I64(v) => (*v).to_le_bytes().to_vec(),
             ABIParam::U128(v) => (*v).to_le_bytes().to_vec(),
             ABIParam::I128(v) => (*v).to_le_bytes().to_vec(),
+            ABIParam::U256(v) => (*v).to_bytes_le().1.to_vec(),
+            ABIParam::I256(v) => (*v).to_bytes_le().1.to_vec(),
             ABIParam::Bool(v) => vec![(*v) as u8],
             ABIParam::Str(v) => {
                 let mut buf = buffer_starts_with_uleb128_len(v.len());
@@ -173,6 +182,8 @@ impl ABIParam {
             ABIParam::I64Array(v) => encode_vec!(v, I64),
             ABIParam::U128Array(v) => encode_vec!(v, U128),
             ABIParam::I128Array(v) => encode_vec!(v, I128),
+            ABIParam::U256Array(v) => encode_vec!(v, U256),
+            ABIParam::I256Array(v) => encode_vec!(v, I256),
             ABIParam::BoolArray(v) => encode_vec!(v, Bool),
             ABIParam::StrArray(v) => encode_vec!(v, Str),
             ABIParam::StrU8Map(v) => encode_map!(v, Str, U8),
@@ -185,6 +196,8 @@ impl ABIParam {
             ABIParam::StrI64Map(v) => encode_map!(v, Str, I64),
             ABIParam::StrU128Map(v) => encode_map!(v, Str, U128),
             ABIParam::StrI128Map(v) => encode_map!(v, Str, I128),
+            ABIParam::StrU256Map(v) => encode_map!(v, Str, U256),
+            ABIParam::StrI256Map(v) => encode_map!(v, Str, I256),
             ABIParam::StrBoolMap(v) => encode_map!(v, Str, Bool),
             ABIParam::StrStrMap(v) => encode_map!(v, Str, Str),
             ABIParam::Parampack(v) => {
@@ -207,6 +220,8 @@ impl ABIParam {
             ABIParam::I64(_) => ParamType::I64,
             ABIParam::U128(_) => ParamType::U128,
             ABIParam::I128(_) => ParamType::I128,
+            ABIParam::U256(_) => ParamType::U256,
+            ABIParam::I256(_) => ParamType::I256,
             ABIParam::Bool(_) => ParamType::Bool,
             ABIParam::Str(_) => ParamType::Str,
             ABIParam::Parampack(_) => ParamType::Parampack,
@@ -220,6 +235,8 @@ impl ABIParam {
             ABIParam::I64Array(_) => ParamType::I64Array,
             ABIParam::U128Array(_) => ParamType::U128Array,
             ABIParam::I128Array(_) => ParamType::I128Array,
+            ABIParam::U256Array(_) => ParamType::U256Array,
+            ABIParam::I256Array(_) => ParamType::I256Array,
             ABIParam::BoolArray(_) => ParamType::BoolArray,
             ABIParam::StrArray(_) => ParamType::StrArray,
             ABIParam::StrU8Map(_) => ParamType::StrU8Map,
@@ -232,6 +249,8 @@ impl ABIParam {
             ABIParam::StrI64Map(_) => ParamType::StrI64Map,
             ABIParam::StrU128Map(_) => ParamType::StrU128Map,
             ABIParam::StrI128Map(_) => ParamType::StrI128Map,
+            ABIParam::StrU256Map(_) => ParamType::StrU256Map,
+            ABIParam::StrI256Map(_) => ParamType::StrI256Map,
             ABIParam::StrBoolMap(_) => ParamType::StrBoolMap,
             ABIParam::StrStrMap(_) => ParamType::StrStrMap,
         }
@@ -280,6 +299,21 @@ pub fn decode_param(
         ParamType::I64 => decode_int!(data, offset, I64, i64, 8),
         ParamType::U128 => decode_int!(data, offset, U128, u128, 16),
         ParamType::I128 => decode_int!(data, offset, I128, i128, 16),
+        ParamType::U256 => {
+            const SIZE: usize = 32;
+            let bytes = get_bytes::<SIZE>(data, offset);
+            let param = ABIParam::U256(BigInt::from_bytes_be(num_bigint::Sign::NoSign, &bytes));
+            *offset += SIZE;
+            Ok(param)
+        }
+        ParamType::I256 => {
+            const SIZE: usize = 32;
+            let bytes = get_bytes::<SIZE>(data, offset);
+            let param = ABIParam::I256(BigInt::from_bytes_be(num_bigint::Sign::NoSign, &bytes));
+            *offset += SIZE;
+            Ok(param)
+        }
+
         ParamType::Bool => {
             let param = ABIParam::Bool(data[*offset] != 0);
             *offset += 1;
@@ -301,6 +335,8 @@ pub fn decode_param(
         ParamType::I64Array => decode_vec!(data, offset, I64, I64Array),
         ParamType::U128Array => decode_vec!(data, offset, U128, U128Array),
         ParamType::I128Array => decode_vec!(data, offset, I128, I128Array),
+        ParamType::U256Array => decode_vec!(data, offset, U256, U256Array),
+        ParamType::I256Array => decode_vec!(data, offset, I256, I256Array),
         ParamType::BoolArray => decode_vec!(data, offset, Bool, BoolArray),
         ParamType::StrArray => decode_vec!(data, offset, Str, StrArray),
         ParamType::StrU8Map => decode_map!(data, offset, Str, U8, StrU8Map),
@@ -313,6 +349,8 @@ pub fn decode_param(
         ParamType::StrI64Map => decode_map!(data, offset, Str, I64, StrI64Map),
         ParamType::StrU128Map => decode_map!(data, offset, Str, U128, StrU128Map),
         ParamType::StrI128Map => decode_map!(data, offset, Str, I128, StrI128Map),
+        ParamType::StrU256Map => decode_map!(data, offset, Str, U256, StrU256Map),
+        ParamType::StrI256Map => decode_map!(data, offset, Str, I256, StrI256Map),
         ParamType::StrBoolMap => decode_map!(data, offset, Str, Bool, StrBoolMap),
         ParamType::StrStrMap => decode_map!(data, offset, Str, Str, StrStrMap),
         ParamType::Parampack => unimplemented!(),

@@ -114,8 +114,8 @@ then using the CJSON_API_VISIBILITY flag to "export" the same symbols the way CJ
 #define strncmp __strncmp
 #define strcpy __strcpy
 #define isdigit __isdigit
-#define strtoi128 __strtoi128
-#define strtou128 __strtou128
+#define strtoi256 __strtoi256
+#define strtou256 __strtou256
 #else
 #include <string.h>
 #include <stdio.h>
@@ -142,9 +142,9 @@ typedef struct cJSON
     /* The item's string, if type==cJSON_String  and type == cJSON_Raw */
     char *valuestring;
     /* writing to valueint is DEPRECATED, use cJSON_SetNumberValue instead */
-    uint128_t valueint;
+    uint256_t valueint;
     /* The item's number, if type==cJSON_Number */
-    int128_t valuedouble;
+    int256_t valuedouble;
 
     /* The item's name string, if this item is the child of, or is in the list of subitems of an object. */
     char *string;
@@ -200,12 +200,10 @@ CJSON_PUBLIC(cJSON *) cJSON_GetArrayItem(const cJSON *array, int index);
 CJSON_PUBLIC(cJSON *) cJSON_GetObjectItem(const cJSON * const object, const char * const string);
 CJSON_PUBLIC(cJSON *) cJSON_GetObjectItemCaseSensitive(const cJSON * const object, const char * const string);
 CJSON_PUBLIC(cJSON_bool) cJSON_HasObjectItem(const cJSON *object, const char *string);
-/* For analysing failed parses. This returns a pointer to the parse error. You'll probably need to look a few chars back to make sense of it. Defined when cJSON_Parse() returns 0. 0 when cJSON_Parse() succeeds. */
-CJSON_PUBLIC(const char *) cJSON_GetErrorPtr(void);
 
 /* Check item type and return its value */
 CJSON_PUBLIC(char *) cJSON_GetStringValue(const cJSON * const item);
-CJSON_PUBLIC(uint128_t) cJSON_GetNumberValue(const cJSON * const item);
+CJSON_PUBLIC(uint256_t) cJSON_GetNumberValue(const cJSON * const item);
 
 /* These functions check the type of an item */
 CJSON_PUBLIC(cJSON_bool) cJSON_IsInvalid(const cJSON * const item);
@@ -224,7 +222,7 @@ CJSON_PUBLIC(cJSON *) cJSON_CreateNull(void);
 CJSON_PUBLIC(cJSON *) cJSON_CreateTrue(void);
 CJSON_PUBLIC(cJSON *) cJSON_CreateFalse(void);
 CJSON_PUBLIC(cJSON *) cJSON_CreateBool(cJSON_bool boolean);
-CJSON_PUBLIC(cJSON *) cJSON_CreateNumber(uint128_t num, bool sign);
+CJSON_PUBLIC(cJSON *) cJSON_CreateNumber(uint256_t num, bool sign);
 CJSON_PUBLIC(cJSON *) cJSON_CreateString(const char *string);
 /* raw json */
 CJSON_PUBLIC(cJSON *) cJSON_CreateRaw(const char *raw);
@@ -243,7 +241,7 @@ CJSON_PUBLIC(cJSON *) cJSON_CreateArrayReference(const cJSON *child);
  * The parameter count cannot be greater than the number of elements in the number array, otherwise array access will be out of bounds.*/
 CJSON_PUBLIC(cJSON *) cJSON_CreateIntArray(const int *numbers, int count);
 CJSON_PUBLIC(cJSON *) cJSON_CreateFloatArray(const float *numbers, int count);
-CJSON_PUBLIC(cJSON *) cJSON_CreateDoubleArray(const uint128_t *numbers, int count);
+CJSON_PUBLIC(cJSON *) cJSON_CreateDoubleArray(const uint256_t *numbers, int count);
 CJSON_PUBLIC(cJSON *) cJSON_CreateStringArray(const char *const *strings, int count);
 
 /* Append item to the specified array/object. */
@@ -293,7 +291,7 @@ CJSON_PUBLIC(cJSON*) cJSON_AddNullToObject(cJSON * const object, const char * co
 CJSON_PUBLIC(cJSON*) cJSON_AddTrueToObject(cJSON * const object, const char * const name);
 CJSON_PUBLIC(cJSON*) cJSON_AddFalseToObject(cJSON * const object, const char * const name);
 CJSON_PUBLIC(cJSON*) cJSON_AddBoolToObject(cJSON * const object, const char * const name, const cJSON_bool boolean);
-CJSON_PUBLIC(cJSON*) cJSON_AddNumberToObject(cJSON * const object, const char * const name, const uint128_t number, bool sign);
+CJSON_PUBLIC(cJSON*) cJSON_AddNumberToObject(cJSON * const object, const char * const name, const uint256_t number, bool sign);
 CJSON_PUBLIC(cJSON*) cJSON_AddStringToObject(cJSON * const object, const char * const name, const char * const string);
 CJSON_PUBLIC(cJSON*) cJSON_AddRawToObject(cJSON * const object, const char * const name, const char * const raw);
 CJSON_PUBLIC(cJSON*) cJSON_AddObjectToObject(cJSON * const object, const char * const name);
@@ -302,8 +300,8 @@ CJSON_PUBLIC(cJSON*) cJSON_AddArrayToObject(cJSON * const object, const char * c
 /* When assigning an integer value, it needs to be propagated to valuedouble too. */
 #define cJSON_SetIntValue(object, number) ((object) ? (object)->valueint = (object)->valuedouble = (number) : (number))
 /* helper for the cJSON_SetNumberValue macro */
-CJSON_PUBLIC(uint128_t) cJSON_SetNumberHelper(cJSON *object, uint128_t number);
-#define cJSON_SetNumberValue(object, number) ((object != NULL) ? cJSON_SetNumberHelper(object, (uint128_t)number) : (number))
+CJSON_PUBLIC(uint256_t) cJSON_SetNumberHelper(cJSON *object, uint256_t number);
+#define cJSON_SetNumberValue(object, number) ((object != NULL) ? cJSON_SetNumberHelper(object, (uint256_t)number) : (number))
 /* Change the valuestring of a cJSON_String object, only takes effect when type of object is cJSON_String */
 CJSON_PUBLIC(char*) cJSON_SetValuestring(cJSON *object, const char *valuestring);
 

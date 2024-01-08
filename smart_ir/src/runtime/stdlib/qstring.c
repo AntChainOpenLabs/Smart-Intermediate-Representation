@@ -68,7 +68,7 @@ vector_to_bytes(struct vector *v) {
     uint32_t index = 0;
     // TODO: too slow and need too many gas when big str params to bytes
     while (index < v->len ) {
-        auto elem = v->data[index];
+        int elem = v->data[index];
         qvector_addlast(res, &elem);
         index ++;
     }

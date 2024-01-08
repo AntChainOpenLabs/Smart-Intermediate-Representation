@@ -17,12 +17,12 @@ jobs:
       - name: Code format check
         working-directory: ./ir_cli
         run: |
-          rustup default 1.67
+          rustup default 1.70
           make fmt-check
         shell: bash
       - name: e2e tests
         working-directory: ./ir_cli
         shell: bash
         run: |
-          rustup default 1.67
+          rustup default 1.70
           make test

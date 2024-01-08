@@ -58,6 +58,10 @@ extern int32_t get_call_result_length(void);
 // get_call_result hostapi
 extern void get_call_result(char *result);
 
+uint256_t div256_u256_rem(uint256_t dividend, uint256_t divisor, uint256_t *remainder);
+
+uint256_t div256_u256(uint256_t dividend, uint256_t divisor);
+
 void
 runtime_abort(char *msg, uint32_t msg_length,
               struct RuntimeContext *runtime_context)
@@ -472,35 +476,35 @@ memcpy_offset(uint8_t *des, int32_t des_length, int32_t offset, uint8_t *src,
 }
 
 size_t
-__numlen(int128_t num)
+__numlen(int256_t num)
 {
-    if (num == 0) {
+    if (num == (int256_t) 0) {
         return 1;
     }
     int32_t flag = 0;
     int32_t len = 0;
-    if (num == INT128_MIN) {
-        num = (int128_t)num + 1;
+    if (num == INT256_MIN) {
+        num = num + (int256_t)1;
     }
-    if (num < 0) {
+    if (num < (int256_t)0) {
         num = -num;
         flag = 1;
     }
-    for(; num > 0; ++len) {
-        num /= 10;
+    for(; num >(int256_t) 0; ++len) {
+        num = div256_u256(num, (int256_t) 10);
     }
     return len + flag;
 }
 
 size_t
-__unumlen(uint128_t num)
+__unumlen(uint256_t num)
 {
-    if (num == 0) {
+    if (num == (uint256_t)0) {
         return 1;
     }
     int32_t len = 0;
-    for(; num > 0; ++len) {
-        num /= 10;
+    for(; num >(uint256_t) 0; ++len) {
+        num = div256_u256(num, (uint256_t) 10);
     }
     return len;
 }
@@ -581,14 +585,15 @@ __isalpha(int32_t c)
     return ((unsigned)c|32)-'a' < 26;
 }
 
-int128_t __strtoi128(const char *__restrict nptr,
+int256_t __strtoi256(const char *__restrict nptr,
                      char **__restrict endptr,
                      int base) {
     register const unsigned char *s = (const unsigned char *) nptr;
-    register uint128_t acc;
+    register uint256_t acc;
     register int c;
-    register uint128_t cutoff;
-    register int neg = 0, any, cutlim;
+    register uint256_t cutoff;
+    register int neg = 0, any;
+    uint256_t cutlim;
     /*
      * Skip white space and pick up leading +/- sign if any.
      * If base is 0, allow 0x for hex and 0 for octal, else
@@ -627,9 +632,9 @@ int128_t __strtoi128(const char *__restrict nptr,
      * Set any if any `digits' consumed; make it negative to indicate
      * overflow.
      */
-    cutoff = neg ? -(uint128_t) INT128_MIN : INT128_MAX;
-    cutlim = cutoff % (uint128_t) base;
-    cutoff /= (uint128_t) base;
+    cutoff = neg ? -(int256_t) INT256_MIN : INT256_MAX;
+
+    cutoff =  div256_u256_rem((uint256_t) cutoff, (uint256_t) base, &cutlim);
     for (acc = 0, any = 0;; c = *s++) {
         if (__isdigit(c))
             c -= '0';
@@ -643,12 +648,12 @@ int128_t __strtoi128(const char *__restrict nptr,
             any = -1;
         else {
             any = 1;
-            acc *= base;
-            acc += c;
+            acc *= (uint256_t)base;
+            acc += (uint256_t)c;
         }
     }
     if (any < 0) {
-        acc = neg ? INT128_MIN : INT128_MAX;
+        acc = neg ? INT256_MIN : INT256_MAX;
     } else if (neg)
         acc = -acc;
     if (endptr != 0)
@@ -657,15 +662,16 @@ int128_t __strtoi128(const char *__restrict nptr,
 }
 
 
-uint128_t __strtou128(const char *__restrict nptr,
+uint256_t __strtou256(const char *__restrict nptr,
                      char **__restrict endptr,
                      int base)
 {
     register const unsigned char *s = (const unsigned char *)nptr;
-    register uint128_t acc;
+    register uint256_t acc;
     register int c;
-    register uint128_t cutoff;
-    register int neg = 0, any, cutlim;
+    register uint256_t cutoff;
+    register int neg = 0, any;
+    uint256_t cutlim;
     /*
      * See strtol for comments as to the logic used.
      */
@@ -685,8 +691,7 @@ uint128_t __strtou128(const char *__restrict nptr,
     }
     if (base == 0)
         base = c == '0' ? 8 : 10;
-    cutoff = (uint128_t)UINT128_MAX / (uint128_t)base;
-    cutlim = (uint128_t)UINT128_MAX % (uint128_t)base;
+    cutoff = div256_u256_rem(UINT256_MAX, (uint256_t) base, &cutlim);
     for (acc = 0, any = 0;; c = *s++) {
         if (__isdigit(c))
             c -= '0';
@@ -700,12 +705,12 @@ uint128_t __strtou128(const char *__restrict nptr,
             any = -1;
         else {
             any = 1;
-            acc *= base;
-            acc += c;
+            acc *= (uint256_t)base;
+            acc += (uint256_t)c;
         }
     }
     if (any < 0) {
-        acc = UINT128_MAX;
+        acc = UINT256_MAX;
     } else if (neg)
         acc = -acc;
     if (endptr != 0)
@@ -739,4 +744,74 @@ void builtin_co_call_or_revert(const char *contract,
             builtin_revert(err_code, err_ir_str);
         }
     }
+}
+
+
+
+int __fls(uint128_t value ) {
+   return value - (value & (value - 1));
+}
+
+uint256_t div256_128(uint256_t n, uint128_t base, uint128_t *rem)
+{
+    uint256_t rem_256 = n ;
+	uint256_t b = (uint256_t) base;
+	uint256_t res, d = 1;
+	uint128_t high = (uint128_t) (n >> (uint256_t) 128);
+
+	res = 0;
+	if (high >= base) {
+		high /= base;
+		res = (uint256_t) high << (uint256_t) 128;
+		rem_256 -= ((uint256_t)high* (uint256_t)base) << (uint256_t) 128;
+	}
+   
+	while (b >(uint256_t) 0 && b < rem_256) {
+		b = b+b;
+		d = d+d;
+	}
+
+	do {
+		if (rem_256  >= b) {
+			rem_256 -= b;
+			res += d;
+		}
+		b >>= 1;
+		d >>= 1;
+	} while (d);
+    *rem = (uint128_t) rem_256;
+	return res;
+}
+
+
+uint256_t div256_u256_rem(uint256_t dividend, uint256_t divisor, uint256_t *remainder)
+{
+	uint128_t high = (uint128_t) (divisor >>(uint256_t) 128);
+	uint256_t quot;
+
+	if (high == 0) {
+		uint128_t rem128;
+		quot = div256_128(dividend, (uint128_t) divisor, &rem128); 
+		*remainder = (uint256_t) rem128;
+	} else {
+        uint128_t rem128;
+		int n = __fls(high);
+        quot = div256_128(dividend >> n, divisor >> n,&rem128);
+
+		if (quot != 0)
+			quot--;
+        
+		*remainder = dividend - quot * divisor;
+		if (*remainder >= divisor) {
+			quot++;
+			*remainder -= divisor;
+		}
+	}
+
+	return quot;
+}
+
+uint256_t div256_u256(uint256_t dividend, uint256_t divisor) {
+    uint256_t rem;
+    return div256_u256_rem(dividend, divisor, &rem);
 }

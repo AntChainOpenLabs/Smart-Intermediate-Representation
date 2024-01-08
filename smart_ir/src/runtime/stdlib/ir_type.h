@@ -18,22 +18,24 @@ typedef enum IRRuntimeType {
     IR_RUNTIME_TYPE_U32 = 2,
     IR_RUNTIME_TYPE_U64 = 3,
     IR_RUNTIME_TYPE_U128 = 4,
+    IR_RUNTIME_TYPE_U256 = 5,
 
-    IR_RUNTIME_TYPE_I8 = 5,
-    IR_RUNTIME_TYPE_I16 = 6,
-    IR_RUNTIME_TYPE_I32 = 7,
-    IR_RUNTIME_TYPE_I64 = 8,
-    IR_RUNTIME_TYPE_I128 = 9,
+    IR_RUNTIME_TYPE_I8 = 6,
+    IR_RUNTIME_TYPE_I16 = 7,
+    IR_RUNTIME_TYPE_I32 = 8,
+    IR_RUNTIME_TYPE_I64 = 9,
+    IR_RUNTIME_TYPE_I128 = 10,
+    IR_RUNTIME_TYPE_I256 = 11,
 
-    IR_RUNTIME_TYPE_BOOL = 10,
-    IR_RUNTIME_TYPE_STR = 11,
-    IR_RUNTIME_TYPE_ASSET = 12,
-    IR_RUNTIME_TYPE_STRUCT = 13,
-    IR_RUNTIME_TYPE_ARRAY = 14,
-    IR_RUNTIME_TYPE_MAP = 15
+    IR_RUNTIME_TYPE_BOOL = 12,
+    IR_RUNTIME_TYPE_STR = 13,
+    IR_RUNTIME_TYPE_ASSET = 14,
+    IR_RUNTIME_TYPE_STRUCT = 15,
+    IR_RUNTIME_TYPE_ARRAY = 16,
+    IR_RUNTIME_TYPE_MAP = 17
 } IRRuntimeType;
 
-#define IRRuntimeIntegerTypeMaxEnum IR_RUNTIME_TYPE_I128
+#define IRRuntimeIntegerTypeMaxEnum IR_RUNTIME_TYPE_I256
 
 inline bool
 __attribute__((artificial)) __attribute__((always_inline)) 
@@ -97,6 +99,8 @@ get_ptr_of_ptr_value(uint32_t runtime_class_offset, void *val);
 void *
 get_array_elem_ptr_at_idx(uint32_t runtime_class_offset, void *val,
                           uint32_t idx);
+// Get the real malloc size of the ir-type value
+size_t calculate_ir_type_size(struct IRRuntimeClass *runtime_class);
 
 #ifdef __cplusplus
 } // end "C"

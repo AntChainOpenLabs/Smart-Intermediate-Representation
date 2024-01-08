@@ -50,6 +50,11 @@ extern "C" {
 typedef struct qvector_s qvector_t;
 typedef struct qvector_obj_s qvector_obj_t;
 
+struct qvector_iter {
+    struct qvector_s* vec;
+    struct qvector_obj_s* obj;
+};
+
 /* public functions */
 enum {
     QVECTOR_THREADSAFE = (0x01),    /*!< make it thread-safe */

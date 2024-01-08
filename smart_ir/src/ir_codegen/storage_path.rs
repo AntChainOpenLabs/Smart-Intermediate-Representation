@@ -63,9 +63,10 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                     let leb128_bytes_length = self
                         .build_call("uleb128_value_length", &[val])
                         .into_int_value();
-                    let bytes =
-                        self.builder
-                            .build_array_alloca(self.i8_type(), leb128_bytes_length, "");
+                    let bytes = self
+                        .builder
+                        .build_array_alloca(self.i8_type(), leb128_bytes_length, "")
+                        .unwrap();
                     self.build_call("encode_uleb128", &[val, bytes.into(), self.i32_value(0)]);
 
                     (bytes, leb128_bytes_length.into())
@@ -163,59 +164,79 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let key_len = path.keys.len();
         let key_count = self.i32_value(key_len.try_into().unwrap());
 
-        let key_datas = self.builder.build_array_alloca(
-            self.i8_ptr_type(),
-            self.native_i8(key_len.try_into().unwrap()),
-            "",
-        );
+        let key_datas = self
+            .builder
+            .build_array_alloca(
+                self.i8_ptr_type(),
+                self.native_i8(key_len.try_into().unwrap()),
+                "",
+            )
+            .unwrap();
 
-        let key_lengths = self.builder.build_array_alloca(
-            self.i32_type(),
-            self.native_i8(key_len.try_into().unwrap()),
-            "",
-        );
+        let key_lengths = self
+            .builder
+            .build_array_alloca(
+                self.i32_type(),
+                self.native_i8(key_len.try_into().unwrap()),
+                "",
+            )
+            .unwrap();
 
         for i in 0..key_len {
             let key = path.keys.get(i).unwrap();
             let (key_data_value, key_data_len) = { self.eval_path_expr(key) };
             let key_data = unsafe {
-                self.builder.build_in_bounds_gep(
-                    key_datas,
-                    &[self.native_i8(i.try_into().unwrap())],
-                    "",
-                )
+                self.builder
+                    .build_in_bounds_gep(
+                        key_datas.get_type(),
+                        key_datas,
+                        &[self.native_i8(i.try_into().unwrap())],
+                        "",
+                    )
+                    .unwrap()
             };
-            self.builder.build_store(key_data, key_data_value);
+            self.builder.build_store(key_data, key_data_value).unwrap();
 
             let key_length = unsafe {
-                self.builder.build_in_bounds_gep(
-                    key_lengths,
-                    &[self.native_i8(i.try_into().unwrap())],
-                    "",
-                )
+                self.builder
+                    .build_in_bounds_gep(
+                        key_lengths.get_type(),
+                        key_lengths,
+                        &[self.native_i8(i.try_into().unwrap())],
+                        "",
+                    )
+                    .unwrap()
             };
-            self.builder.build_store(key_length, key_data_len);
+            self.builder.build_store(key_length, key_data_len).unwrap();
         }
 
         // extra_args
         let extra_args_count = path.extra_args.len();
         let extra_args_count_value = self.i32_value(extra_args_count as u64);
 
-        let extra_args_array = self.builder.build_array_alloca(
-            self.i32_type(),
-            self.native_i8(extra_args_count.try_into().unwrap()),
-            "",
-        );
+        let extra_args_array = self
+            .builder
+            .build_array_alloca(
+                self.i32_type(),
+                self.native_i8(extra_args_count.try_into().unwrap()),
+                "",
+            )
+            .unwrap();
         for (i, &extra_arg) in path.extra_args.iter().enumerate() {
             let extra_arg_data = unsafe {
-                self.builder.build_in_bounds_gep(
-                    extra_args_array,
-                    &[self.native_i8(i.try_into().unwrap())],
-                    "",
-                )
+                self.builder
+                    .build_in_bounds_gep(
+                        extra_args_array.get_type(),
+                        extra_args_array,
+                        &[self.native_i8(i.try_into().unwrap())],
+                        "",
+                    )
+                    .unwrap()
             };
             let extra_arg_value = self.i32_value(extra_arg as u64);
-            self.builder.build_store(extra_arg_data, extra_arg_value);
+            self.builder
+                .build_store(extra_arg_data, extra_arg_value)
+                .unwrap();
         }
         (
             key_count,
@@ -261,14 +282,17 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 .into_int_value()
         };
 
-        let is_empty = self.builder.build_int_compare(
-            IntPredicate::EQ,
-            length,
-            self.i32_value(DATA_EMPTY_LENGTH as u64).into_int_value(),
-            "",
-        );
+        let is_empty = self
+            .builder
+            .build_int_compare(
+                IntPredicate::EQ,
+                length,
+                self.i32_value(DATA_EMPTY_LENGTH as u64).into_int_value(),
+                "",
+            )
+            .unwrap();
 
-        let value_ptr = self.builder.build_alloca(self.llvm_type(ty), "");
+        let value_ptr = self.builder.build_alloca(self.llvm_type(ty), "").unwrap();
 
         let then_block = self.append_block("default value");
         let else_block = self.append_block("read storage object");
@@ -279,7 +303,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         // Check if storage path has exceeded index
         self.build_void_call("assert_storage_array_index", &[path_ptr]);
         let then_value = self.type_default_value(ty);
-        self.builder.build_store(value_ptr, then_value);
+        self.builder.build_store(value_ptr, then_value).unwrap();
         self.br(end_block);
         self.builder.position_at_end(else_block);
         let data = self
@@ -287,7 +311,8 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             .into_pointer_value();
         let data = unsafe {
             self.builder
-                .build_in_bounds_gep(data, &[self.native_i8(0)], "")
+                .build_in_bounds_gep(data.get_type(), data, &[self.native_i8(0)], "")
+                .unwrap()
                 .into()
         };
 
@@ -303,10 +328,13 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         }
 
         let else_value = self.ssz_decode_with_version(ty, ssz_info, data, length.into());
-        self.builder.build_store(value_ptr, else_value);
+        self.builder.build_store(value_ptr, else_value).unwrap();
         self.br(end_block);
         self.builder.position_at_end(end_block);
-        Ok(self.builder.build_load(value_ptr, ""))
+        Ok(self
+            .builder
+            .build_load(value_ptr.get_type(), value_ptr, "")
+            .unwrap())
     }
 
     pub fn write_storage_object(

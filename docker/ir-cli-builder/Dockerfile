@@ -50,6 +50,8 @@ RUN yum install -y bison
 #RUN source /opt/rh/devtoolset-11/enable
 RUN yum install -y gcc-c++
 RUN yum install -y gcc-toolset-11 gcc-toolset-11-gcc-c++ gcc-toolset-11-make gcc-toolset-11-libasan-devel gcc-toolset-11-gdb gcc-toolset-11-binutils
+RUN echo "source /opt/rh/gcc-toolset-11/enable" >> /etc/bashrc
+SHELL ["/bin/bash", "--login", "-c"]
 RUN mkdir -p /opt
 WORKDIR /opt
 # COPY linux-x64/clang+llvm-14.0.6-x86_64-linux-gnu-rhel-8.4.tar.xz /opt/

@@ -27,6 +27,8 @@ ir_builtin_data_stream_encode_u64(uint64_t value);
 extern qvector_t *
 ir_builtin_data_stream_encode_u128(__uint128_t value);
 extern qvector_t *
+ir_builtin_data_stream_encode_u256(uint256_t value);
+extern qvector_t *
 ir_builtin_data_stream_encode_i8(int8_t value);
 extern qvector_t *
 ir_builtin_data_stream_encode_i16(int16_t value);
@@ -36,6 +38,8 @@ extern qvector_t *
 ir_builtin_data_stream_encode_i64(int64_t value);
 extern qvector_t *
 ir_builtin_data_stream_encode_i128(__int128_t value);
+extern qvector_t *
+ir_builtin_data_stream_encode_i256(int256_t value);
 extern qvector_t *
 ir_builtin_data_stream_encode_str(const struct vector *value);
 
@@ -55,6 +59,8 @@ ir_builtin_data_stream_encode_u64array(qvector_t *v);
 extern qvector_t *
 ir_builtin_data_stream_encode_u128array(qvector_t *v);
 extern qvector_t *
+ir_builtin_data_stream_encode_u256array(qvector_t *v);
+extern qvector_t *
 ir_builtin_data_stream_encode_i8array(qvector_t *v);
 extern qvector_t *
 ir_builtin_data_stream_encode_i16array(qvector_t *v);
@@ -64,6 +70,8 @@ extern qvector_t *
 ir_builtin_data_stream_encode_i64array(qvector_t *v);
 extern qvector_t *
 ir_builtin_data_stream_encode_i128array(qvector_t *v);
+extern qvector_t *
+ir_builtin_data_stream_encode_i256array(qvector_t *v);
 
 /* Map */
 extern qvector_t *
@@ -79,6 +87,8 @@ ir_builtin_data_stream_encode_stru64map(qhashtbl_t *value);
 extern qvector_t *
 ir_builtin_data_stream_encode_stru128map(qhashtbl_t *value);
 extern qvector_t *
+ir_builtin_data_stream_encode_stru256map(qhashtbl_t *value);
+extern qvector_t *
 ir_builtin_data_stream_encode_stri8map(qhashtbl_t *value);
 extern qvector_t *
 ir_builtin_data_stream_encode_stri16map(qhashtbl_t *value);
@@ -88,6 +98,8 @@ extern qvector_t *
 ir_builtin_data_stream_encode_stri64map(qhashtbl_t *value);
 extern qvector_t *
 ir_builtin_data_stream_encode_stri128map(qhashtbl_t *value);
+extern qvector_t *
+ir_builtin_data_stream_encode_stri256map(qhashtbl_t *value);
 extern qvector_t *
 ir_builtin_data_stream_encode_strstrmap(qhashtbl_t *value);
 

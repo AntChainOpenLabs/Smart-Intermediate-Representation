@@ -48,6 +48,12 @@ extern "C" {
 typedef struct qhashtbl_s qhashtbl_t;
 typedef struct qhashtbl_obj_s qhashtbl_obj_t;
 
+
+struct qhashtbl_iter {
+    struct qhashtbl_s* tbl;
+    struct qhashtbl_obj_s* obj;
+};
+
 enum {
     QHASHTBL_THREADSAFE = (0x01) /*!< make it thread-safe */
 };

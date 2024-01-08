@@ -70,6 +70,30 @@ static size_t rlp_simple_encode_uint128_to_bytes(uint128_t value, uint8_t *buf) 
     return bytes_count;
 }
 
+static size_t rlp_simple_encode_uint256_to_bytes(uint256_t value, uint8_t *buf) {
+    if (value == (uint256_t) 0) {
+        return 0; // empty bytes means 0
+    }
+    // the wasm is little endian, so just memcpy
+    const size_t max_bytes_size = sizeof(uint256_t);
+    uint8_t max_buf[max_bytes_size];
+    uint256_t *value_mem = (uint256_t*) __malloc(sizeof(uint256_t));
+    *value_mem = value;
+    memcpy(max_buf, value_mem, sizeof(uint256_t));
+    size_t bytes_count = max_bytes_size; // at least 1
+    for (int32_t i=max_bytes_size-1;i>0;i--) { // at least need one byte
+        if (max_buf[i] != 0) {
+            break;
+        }
+        bytes_count--;
+    }
+    // buf is reverse of max_buf, but only contains needed data
+    for (size_t i=0;i<bytes_count;i++) {
+        buf[i] = max_buf[bytes_count-i-1];
+    }
+    return bytes_count;
+}
+
 // int128 is slower than int64, and int64 is native supported in wasm. so must ints use int64 to decode
 static uint64_t rlp_simple_decode_uint64(uint8_t *buf, size_t len) {
     uint64_t sum = 0;
@@ -90,6 +114,18 @@ static int128_t rlp_simple_decode_uint128(uint8_t *buf, size_t len) {
         sum += multiply * (int128_t) buf[i];
         if (i >= 1) {
             multiply *= 256; // 1 << 8
+        }
+    }
+    return sum;
+}
+
+static uint256_t rlp_simple_decode_uint256(uint8_t *buf, size_t len) {
+    uint256_t sum = 0;
+    uint256_t multiply = 1;
+    for (int32_t i=len-1;i>=0;i--) { // i must be int32_t, otherwise loop forever
+        sum +=(uint256_t) multiply * (uint256_t) buf[i];
+        if (i >= 1) {
+            multiply *= (uint256_t)256; // 1 << 8
         }
     }
     return sum;
@@ -317,6 +353,14 @@ void common_rlp_encode(ByteStream *stream, uint32_t runtime_class_offset, void *
             rlp_encode_bytes(stream, bytes);
         }
             break;
+        case IR_RUNTIME_TYPE_U256: {
+            uint256_t ival = *((uint256_t *) val);
+            qvector_t *bytes = qvector(sizeof(uint256_t), 1, QVECTOR_RESIZE_DOUBLE);
+            int32_t n = rlp_simple_encode_uint256_to_bytes(ival, bytes->data);
+            bytes->num = n;
+            rlp_encode_bytes(stream, bytes);
+        }
+            break;
         case IR_RUNTIME_TYPE_I8: {
             int8_t ival = *((int8_t *) val);
             qvector_t *bytes = qvector(8, 1, QVECTOR_RESIZE_DOUBLE);
@@ -358,6 +402,15 @@ void common_rlp_encode(ByteStream *stream, uint32_t runtime_class_offset, void *
             qvector_t *bytes = qvector(sizeof(int128_t), 1, QVECTOR_RESIZE_DOUBLE);
             // TODO: use uint128
             int32_t n = rlp_simple_encode_uint128_to_bytes(ival, bytes->data);
+            bytes->num = n;
+            rlp_encode_bytes(stream, bytes);
+        }
+            break;
+        case IR_RUNTIME_TYPE_I256: {
+            int256_t ival = *((int256_t *) val);
+            qvector_t *bytes = qvector(sizeof(int256_t), 1, QVECTOR_RESIZE_DOUBLE);
+            // TODO: use uint256
+            int32_t n = rlp_simple_encode_uint256_to_bytes(ival, bytes->data);
             bytes->num = n;
             rlp_encode_bytes(stream, bytes);
         }
@@ -493,6 +546,13 @@ void *common_rlp_decode(ByteStream *stream, uint32_t runtime_class_offset) {
             *value = rlp_simple_decode_uint128(int_bytes->data, int_bytes->num);
             return value;
         } break;
+        case IR_RUNTIME_TYPE_U256:
+        {
+            qvector_t *int_bytes = rlp_decode(stream);
+            uint256_t *value = (uint256_t *) __malloc(sizeof(uint256_t));
+            *value = rlp_simple_decode_uint256(int_bytes->data, int_bytes->num);
+            return value;
+        } break;
         case IR_RUNTIME_TYPE_I8: {
             qvector_t *int_bytes = rlp_decode(stream);
             int32_t value = rlp_simple_decode_uint64(int_bytes->data, int_bytes->num);
@@ -526,6 +586,13 @@ void *common_rlp_decode(ByteStream *stream, uint32_t runtime_class_offset) {
             qvector_t *int_bytes = rlp_decode(stream);
             int128_t *value = (int128_t *) __malloc(sizeof(int128_t));
             *value = rlp_simple_decode_uint128(int_bytes->data, int_bytes->num);
+            return value;
+        } break;
+        case IR_RUNTIME_TYPE_I256:
+        {
+            qvector_t *int_bytes = rlp_decode(stream);
+            int256_t *value = (int256_t *) __malloc(sizeof(int256_t));
+            *value = rlp_simple_decode_uint256(int_bytes->data, int_bytes->num);
             return value;
         } break;
         case IR_RUNTIME_TYPE_BOOL:

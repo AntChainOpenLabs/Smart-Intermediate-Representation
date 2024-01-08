@@ -53,7 +53,7 @@ pub type CompileResult<'a> = Result<BasicValueEnum<'a>, CodeGenError>;
 /// The compiler scope.
 pub struct Scope<'ctx> {
     pub variables: RefCell<IndexMap<String, PointerValue<'ctx>>>,
-    pub closures: RefCell<IndexMap<String, PointerValue<'ctx>>>,
+    pub variable_tys: RefCell<IndexMap<String, BasicTypeEnum<'ctx>>>,
 }
 
 #[derive(Default)]
@@ -137,7 +137,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         if let Some(ptr) = global_strings.get(value) {
             *ptr
         } else {
-            let gv = unsafe { self.builder.build_global_string(value, name) };
+            let gv = unsafe { self.builder.build_global_string(value, name).unwrap() };
             let ptr = self
                 .ptr_cast(
                     gv.as_pointer_value().into(),
@@ -218,46 +218,51 @@ impl<'ctx> BuilderMethods for IR2LLVMCodeGenContext<'ctx> {
     /// SSA ret instruction.
     #[inline]
     fn ret_void(&self) {
-        self.builder.build_return(None);
+        self.builder.build_return(None).unwrap();
     }
     /// SSA ret instruction with returned value.
     #[inline]
     fn ret(&self, v: Self::Value) {
-        self.builder.build_return(Some(&v));
+        self.builder.build_return(Some(&v)).unwrap();
     }
     /// SSA br instruction.
     #[inline]
     fn br(&self, dest: Self::BasicBlock) {
-        self.builder.build_unconditional_branch(dest);
+        self.builder.build_unconditional_branch(dest).unwrap();
     }
     /// SSA cond br instruction.
     #[inline]
     fn cond_br(&self, cond: Self::Value, then_bb: Self::BasicBlock, else_bb: Self::BasicBlock) {
         self.builder
-            .build_conditional_branch(cond.into_int_value(), then_bb, else_bb);
+            .build_conditional_branch(cond.into_int_value(), then_bb, else_bb)
+            .unwrap();
     }
     /// SSA load instruction.
     #[inline]
-    fn load(&self, ptr: Self::Value, name: &str) -> Self::Value {
-        self.builder.build_load(ptr.into_pointer_value(), name)
+    fn load(&self, pointee_ty: Self::Type, ptr: Self::Value, name: &str) -> Self::Value {
+        self.builder
+            .build_load(pointee_ty, ptr.into_pointer_value(), name)
+            .unwrap()
     }
     /// SSA cast int to pointer.
     #[inline]
     fn int_to_ptr(&self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         self.builder
             .build_int_to_ptr(val.into_int_value(), dest_ty.into_pointer_type(), "")
+            .unwrap()
             .into()
     }
     /// SSA bit cast.
     #[inline]
     fn bit_cast(&self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.builder.build_bitcast(val, dest_ty, "")
+        self.builder.build_bitcast(val, dest_ty, "").unwrap()
     }
     /// SSA int cast.
     #[inline]
     fn int_cast(&self, val: Self::Value, dest_ty: Self::Type, _is_signed: bool) -> Self::Value {
         self.builder
             .build_int_cast(val.into_int_value(), dest_ty.into_int_type(), "")
+            .unwrap()
             .into()
     }
     /// SSA pointer cast.
@@ -265,6 +270,7 @@ impl<'ctx> BuilderMethods for IR2LLVMCodeGenContext<'ctx> {
     fn ptr_cast(&self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         self.builder
             .build_pointer_cast(val.into_pointer_value(), dest_ty.into_pointer_type(), "")
+            .unwrap()
             .into()
     }
     /// Lookup a known function named `name`.
@@ -1116,7 +1122,6 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         mpm.add_loop_unroll_and_jam_pass();
         mpm.add_loop_unroll_pass();
-        mpm.add_loop_unswitch_pass();
         assert!(mpm.run_on(&self.module));
     }
 
@@ -1126,9 +1131,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             let ty = function.params.get(i).expect(INTERNAL_ERROR_MSG);
             let name = i.to_string();
             let ty = self.llvm_type(ty);
-            let ptr = self.builder.build_alloca(ty, "");
-            self.builder.build_store(ptr, *param);
-            self.add_variable(&name, ptr);
+            let ptr = self.builder.build_alloca(ty, "").unwrap();
+            self.builder.build_store(ptr, *param).unwrap();
+            self.add_variable(&name, ptr, ty);
             vars_list.insert(name, ty);
         }
     }
@@ -1210,14 +1215,20 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                                 "",
                             );
 
-                            let ver = self.builder.build_load(ver_ptr, "");
+                            let ver = self
+                                .builder
+                                .build_load(self.i8_type(), ver_ptr, "")
+                                .unwrap();
 
-                            let is_valid_ver = self.builder.build_int_compare(
-                                IntPredicate::EQ,
-                                ver.into_int_value(),
-                                self.i8_value(DEFAULT_VERSION as u64).into_int_value(),
-                                "",
-                            );
+                            let is_valid_ver = self
+                                .builder
+                                .build_int_compare(
+                                    IntPredicate::EQ,
+                                    ver.into_int_value(),
+                                    self.i8_value(DEFAULT_VERSION as u64).into_int_value(),
+                                    "",
+                                )
+                                .unwrap();
 
                             let then_block = self.append_block("datastream_decode_arg_value_block");
                             let else_block = self.append_block("datastream_version_error_block");
@@ -1238,14 +1249,14 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                                     &name,
                                 );
                                 offset = next_offset;
-
+                                let llvm_ty = self.llvm_type(ty);
                                 if ty.is_reference_type() || ty.is_string() {
                                     let ptr_to_value =
-                                        self.builder.build_alloca(self.llvm_type(ty), "");
-                                    self.builder.build_store(ptr_to_value, ptr);
-                                    self.add_variable(&name, ptr_to_value);
+                                        self.builder.build_alloca(llvm_ty, "").unwrap();
+                                    self.builder.build_store(ptr_to_value, ptr).unwrap();
+                                    self.add_variable(&name, ptr_to_value, llvm_ty);
                                 } else {
-                                    self.add_variable(&name, ptr);
+                                    self.add_variable(&name, ptr, llvm_ty);
                                 }
                             }
                             //check the end offset
@@ -1266,7 +1277,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                             if function.ret.is_void() {
                                 self.build_void_call(&internal_function_name, &args);
                                 let length = self.i32_value(0);
-                                let data = self.builder.build_alloca(self.i8_type(), "");
+                                let data = self.builder.build_alloca(self.i8_type(), "").unwrap();
                                 self.build_void_call(
                                     HostAPI::SetCallResult.name(),
                                     &[data.into(), length],
@@ -1527,7 +1538,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             }
             let scopes = vec![Rc::new(Scope {
                 variables: RefCell::new(IndexMap::default()),
-                closures: RefCell::new(IndexMap::default()),
+                variable_tys: RefCell::new(IndexMap::default()),
             })];
             pkg_scopes.insert(String::from(pkgpath), scopes);
         }
@@ -1542,7 +1553,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let scopes = pkg_scopes.get_mut(&current_pkgpath).expect(&msg);
         let scope = Rc::new(Scope {
             variables: RefCell::new(IndexMap::default()),
-            closures: RefCell::new(IndexMap::default()),
+            variable_tys: RefCell::new(IndexMap::default()),
         });
         scopes.push(scope);
     }
@@ -1561,15 +1572,22 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
     }
 
     /// Append a variable into the scope
-    pub fn add_variable(&self, name: &str, pointer: PointerValue<'ctx>) {
+    pub fn add_variable(
+        &self,
+        name: &str,
+        pointer: PointerValue<'ctx>,
+        pointee_ty: BasicTypeEnum<'ctx>,
+    ) {
         let current_pkgpath = self.current_pkgpath();
         let mut pkg_scopes = self.pkg_scopes.borrow_mut();
         let msg = format!("pkgpath {current_pkgpath} is not found");
         let scopes = pkg_scopes.get_mut(&current_pkgpath).expect(&msg);
         if let Some(last) = scopes.last_mut() {
             let mut variables = last.variables.borrow_mut();
+            let mut variable_tys = last.variable_tys.borrow_mut();
             if !variables.contains_key(name) {
                 variables.insert(name.to_string(), pointer);
+                variable_tys.insert(name.to_string(), pointee_ty);
             }
         }
     }
@@ -1596,11 +1614,14 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         for i in 0..scopes_len {
             let index = scopes_len - i - 1;
             let variables_mut = scopes[index].variables.borrow_mut();
+            let variable_tys = scopes[index].variable_tys.borrow();
 
             if let Some(ptr) = variables_mut.get(&name.to_string()) {
-                let value = self.builder.build_load(*ptr, name);
-                result = Ok(value);
-                break;
+                if let Some(ty) = variable_tys.get(&name.to_string()) {
+                    let value = self.builder.build_load(*ty, *ptr, name).unwrap();
+                    result = Ok(value);
+                    break;
+                }
             }
         }
         result
@@ -1626,11 +1647,34 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         None
     }
 
+    pub fn get_variable_ty(&self, name: &str) -> Option<BasicTypeEnum<'ctx>> {
+        let pkgpath = self.current_pkgpath();
+        let pkg_scopes = self.pkg_scopes.borrow_mut();
+        // User pkgpath
+        let scopes = pkg_scopes
+            .get(&pkgpath)
+            .unwrap_or_else(|| panic!("package {pkgpath} is not found"));
+        // Scopes 0 is builtin scope, Scopes 1 is the global scope, Scopes 2~ are the local scopes
+        let scopes_len = scopes.len();
+        for i in 0..scopes_len {
+            let index = scopes_len - i - 1;
+            let variable_tys = scopes[index].variable_tys.borrow();
+            if let Some(var) = variable_tys.get(&name.to_string()) {
+                return Some(*var);
+            }
+        }
+
+        None
+    }
+
     pub fn build_or_get_variable(&self, name: &str, var_ty: &Type) -> PointerValue<'ctx> {
         let ptr = self.get_variable_ptr(name);
         if ptr.is_none() {
-            let new_ptr = self.builder.build_alloca(self.llvm_type(var_ty), name);
-            self.add_variable(name, new_ptr);
+            let new_ptr = self
+                .builder
+                .build_alloca(self.llvm_type(var_ty), name)
+                .unwrap();
+            self.add_variable(name, new_ptr, self.llvm_type(var_ty));
             return new_ptr;
         }
 
@@ -1661,6 +1705,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                     mhdrut,
                     "",
                 )
+                .unwrap()
                 .into();
             self.cond_br(is_truth, then_block, else_block);
         }
@@ -1697,7 +1742,8 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
     pub fn build_void_call(&self, name: &str, args: &[BasicValueEnum]) {
         let args: Vec<BasicMetadataValueEnum> = args.iter().map(|v| (*v).into()).collect();
         self.builder
-            .build_call(self.lookup_function(name), &args, "");
+            .build_call(self.lookup_function(name), &args, "")
+            .unwrap();
     }
 
     /// Build a function call with the return value
@@ -1706,6 +1752,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let args: Vec<BasicMetadataValueEnum> = args.iter().map(|v| (*v).into()).collect();
         self.builder
             .build_call(self.lookup_function(name), &args, "")
+            .unwrap()
             .try_as_basic_value()
             .left()
             .unwrap_or_else(|| panic!("{FUNCTION_RETURN_VALUE_NOT_FOUND_MSG}: {name}"))
@@ -1754,7 +1801,8 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let error_block = self.append_block("error");
 
         self.builder
-            .build_conditional_branch(overflow, error_block, success_block);
+            .build_conditional_branch(overflow, error_block, success_block)
+            .unwrap();
 
         self.builder.position_at_end(error_block);
         let msg = format!("math int {op} overflow");
@@ -1765,7 +1813,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 self.i32_value(msg.len() as u64),
             ],
         );
-        self.builder.build_unreachable();
+        self.builder.build_unreachable().unwrap();
 
         self.builder.position_at_end(success_block);
 
@@ -1911,15 +1959,22 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         self.build_void_call("ir_builtin_print", &[val]);
     }
 
-    pub fn memset_struct_ptr(&self, ptr: PointerValue<'ctx>, val: i8) {
-        let void_ptr = self.builder.build_bitcast(ptr, self.i8_ptr_type(), "");
+    pub fn memset_struct_ptr(
+        &self,
+        ptr: PointerValue<'ctx>,
+        pointee_ty: BasicTypeEnum<'ctx>,
+        val: i8,
+    ) {
+        let void_ptr = self
+            .builder
+            .build_bitcast(ptr, self.i8_ptr_type(), "")
+            .unwrap();
         self.build_void_call(
             "__memset",
             &[
                 void_ptr,
                 self.i8_value(val as u64),
-                ptr.get_type()
-                    .get_element_type()
+                pointee_ty
                     .size_of()
                     .unwrap()
                     .const_cast(self.i32_type().into_int_type(), false)
@@ -1964,13 +2019,18 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
 
         for (i, item) in data_str.iter().enumerate() {
             let ch = unsafe {
-                self.builder.build_in_bounds_gep(
-                    arr_value,
-                    &[self.native_i8(i.try_into().unwrap())],
-                    "",
-                )
+                self.builder
+                    .build_in_bounds_gep(
+                        self.i8_type(),
+                        arr_value,
+                        &[self.native_i8(i.try_into().unwrap())],
+                        "",
+                    )
+                    .unwrap()
             };
-            self.builder.build_store(ch, self.i8_value(*item as u64));
+            self.builder
+                .build_store(ch, self.i8_value(*item as u64))
+                .unwrap();
         }
 
         (arr_value, arr_length)
