@@ -25,4 +25,5 @@ jobs:
         shell: bash
         run: |
           rustup default 1.70
+          source /opt/rh/gcc-toolset-11/enable
           make test

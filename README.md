@@ -101,7 +101,9 @@ The IR is still under development. Contributions are always welcome. Please foll
 
 ## Community
 
-coming soon
+![wechat group](./assets/wx.JPG)
+
+![dingtalk group](./assets/dingtalk.png)
 
 <!--
 * Join us on the [Discord]()

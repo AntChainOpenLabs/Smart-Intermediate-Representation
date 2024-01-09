@@ -19,6 +19,7 @@ jobs:
         working-directory: ir_cli 
         run: |
           rustup default 1.70
+          source /opt/rh/gcc-toolset-11/enable
           make release
           ls _build # there should be a ir.tgz file under the ir_cli/_build directory
       - name: Upload Artifact to Github Releases
