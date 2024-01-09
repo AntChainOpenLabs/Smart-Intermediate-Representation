@@ -2,8 +2,7 @@
 // Copyright (c) The Smart Intermediate Representation Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
+use sha2::{Sha256, Digest};
 use rand::Rng;
 use rsa::{Hash, PaddingScheme, PublicKey, RSAPublicKey};
 use std::iter::repeat;
@@ -89,14 +88,10 @@ fn rand_hash() -> String {
 
 /// sha256
 pub fn sha256(msg: &str) -> [u8; 32] {
-    // create a Sha256 object
-    let mut hasher = Sha256::new();
-    // write input message
-    hasher.input_str(msg);
-    // Save the hash digest to buf
-    let mut buf: Vec<u8> = repeat(0).take((hasher.output_bits() + 7) / 8).collect();
-    hasher.result(&mut buf);
-    buf.to_vec().try_into().unwrap()
+    Sha256::digest(msg)
+        .as_slice()
+        .try_into()
+        .expect("Wrong length")
 }
 
 /// verify the signature using rsa algorithm
