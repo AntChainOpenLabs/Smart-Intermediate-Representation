@@ -1,0 +1,234 @@
+// Copyright (c) The Ant Group Core Contributors
+// Copyright (c) The Smart Intermediate Representation Contributors
+// SPDX-License-Identifier: Apache-2.0
+
+use crate::ast;
+use smart_ir::ir::frontend;
+use regex::Regex;
+
+grammar;
+
+Comma<T>: Vec<T> = {
+    => Vec::new(),
+    CommaOne<T> => <>,
+};
+
+CommaOne<T>: Vec<T> = {
+    <e:T> <v:("," <T>)*> => {
+        let mut v = v;
+        v.insert(0, e);
+        v
+    }
+};
+
+pub Object: ast::Object = {
+    "object" <name: StringInner> "{" "code" <code: Block> <inner_segments: InnerSegment*> "}" => ast::Object {
+        name: name,
+        code: code,
+        inner_segments: inner_segments,
+    }
+}
+
+pub InnerSegment: ast::InnerSegment = {
+    "data" <data: DataLiteral*> => ast::InnerSegment::Data(data),
+    <object: Object> => ast::InnerSegment::Object(Box::new(object)),
+}
+
+pub DataLiteral: ast::DataLiteral = {
+    <data: StringInner> => ast::DataLiteral::StringLiteral(data),
+    <data: HexDataInner> => ast::DataLiteral::HexLiteral(data),
+}
+
+
+pub Block: ast::Block = {
+    "{" <statements: Statement*> "}" => ast::Block {
+        statements: statements
+    }
+}
+
+
+pub Statement: ast::Statement = {
+    <Block> => ast::Statement::Block(Box::new(<>)),
+    <FunctionDefinition> => ast::Statement::FunctionDefinition(Box::new(<>)),
+    <VariableDeclaration> => ast::Statement::VariableDeclaration(Box::new(<>)),
+    <Assignment> => ast::Statement::Assignment(Box::new(<>)),
+    <FunctionCall> => ast::Statement::FunctionCall(Box::new(<>)),
+    <If> => ast::Statement::If(Box::new(<>)),
+    <For> => ast::Statement::For(Box::new(<>)),
+    <Switch> => ast::Statement::Switch(Box::new(<>)),
+    "leave" => {
+        ast::Statement::Leave
+    },
+    "break" => {
+        ast::Statement::Break
+    },
+    "continue" => {
+        ast::Statement::Continue
+    },
+}
+
+pub FunctionDefinition: ast::FunctionDefinition = {
+    "function" <name: Identifier> "(" <params: TypedIdentifierList?> ")" <returns:("->" <TypedIdentifierList>)?> <body: Block> => 
+    ast::FunctionDefinition {
+        name: name,
+        params: params.unwrap_or_default(),
+        returns: returns.unwrap_or_default(),
+        body: body,
+    },
+}
+
+pub VariableDeclaration: ast::VariableDeclaration = {
+    "let" <identifiers:TypedIdentifierList> <value:(":=" <Expression>)?> => {
+        ast::VariableDeclaration{identifiers, value}
+    }
+}
+
+pub Assignment: ast::Assignment = {
+    <identifiers:CommaOne<Identifier>> ":=" <value:Expression> => {
+        ast::Assignment{
+            identifiers,
+            value,
+        }
+    }
+}
+
+pub FunctionCall: ast::FunctionCall = {
+    <id:Identifier> "(" <arguments:Comma<Expression>> ")" => {
+        ast::FunctionCall{id, arguments}
+    }
+}
+
+pub For: ast::For = {
+    "for" <init:Block> <cond:Expression> <post_iter:Block> <body:Block> => {
+        ast::For{
+            init_block: init,
+            condition: cond,
+            post_block: post_iter,
+            execution_block: body
+        }
+    },
+}
+
+pub If: ast::If = {
+    "if" <cond: Expression> <body: Block> => {
+        ast::If{
+            cond, 
+            body
+        }
+    },
+}
+
+
+pub Switch: ast::Switch = {
+    "switch" <condition:Expression> <opt:SwitchOptions> =>
+        ast::Switch{
+            condition,
+            opt,
+        },
+        
+}
+
+pub SwitchOptions: ast::SwitchOptions = {
+    <case:SwitchCase+> <default:SwitchDefault?> => {
+        ast::SwitchOptions::Cases(case, default)
+    },
+    <default:SwitchDefault> => {
+        ast::SwitchOptions::Default(<>)
+    }
+}
+
+pub SwitchCase: ast::SwitchCase = {
+    "case" <case:Literal> <body:Block> => ast::SwitchCase{
+        case,
+        body
+    }
+}
+
+pub SwitchDefault: ast:: SwitchDefault = {
+    "default" <body:Block> => {
+        ast::SwitchDefault{
+            body
+        }
+    }
+}
+
+
+pub Expression: ast::Expression = {
+    <Literal> => ast::Expression::Literal(<>),
+    <Identifier> => ast::Expression::Identifier(<>),
+    <FunctionCall> => ast::Expression::FunctionCall(Box::new(<>)),
+}
+
+pub Literal: ast::Literal = {
+    "true" <t_type:(":" <Identifier>)?> => ast::Literal::TrueLiteral(t_type),
+    "false" <t_type:(":" <Identifier>)?> => ast::Literal::FalseLiteral(t_type),
+    <dec: DecimalNumber> <t_type:(":" <Identifier>)?> => ast::Literal::DecimalNumberLiteral(dec, t_type),
+    <hex: HexNumber> <t_type:(":" <Identifier>)?> => ast::Literal::HexNumberLiteral(hex, t_type),
+    <str:StringLiteral> <t_type:(":" <Identifier>)?> => {
+        ast::Literal::StringLiteral(str, t_type)
+    },
+}
+
+pub DecimalNumber: ast::DecimalNumber = {
+    <dec: DecimalNumberInner> => ast::DecimalNumber{
+        dec: dec
+    }
+}
+
+pub HexNumber: ast::HexNumber = {
+    <hex: HexNumberInner> => ast::HexNumber{
+        hex: hex
+    }
+}
+
+
+pub StringLiteral: ast::StringLiteral = {
+    <str: StringInner>=> ast::StringLiteral{
+        str: str
+    }
+}
+
+pub TypedIdentifierList: Vec<ast::TypedIdentifier> = {
+    CommaOne<<TypedIdentifier>> => <>
+}
+
+pub TypedIdentifier: ast::TypedIdentifier = {
+    <id: Identifier> ":" <type_name: TypeName> => 
+        ast::TypedIdentifier {
+            identifier: id,
+            type_name: Some(type_name),
+        },
+    <identifier: Identifier> => 
+        ast::TypedIdentifier {
+            identifier: identifier,
+            type_name: None,
+        }
+}
+
+pub TypeName: ast::TypeName = {
+    <type_name: Identifier> => ast::TypeName{
+        type_name: type_name,
+    }
+}
+
+pub Identifier: ast::Identifier = {
+    <name: Name> => ast::Identifier{
+        name: name,
+    }
+}
+
+pub Name: String = <s:r"[a-zA-Z][a-zA-Z_0-9.]*"> => String::from(s);
+
+pub DecimalNumberInner: String = <s:r"[0-9]+"> => String::from(s);
+
+pub HexNumberInner: String = <s:r"0x[0-9a-fA-F]+"> => String::from(s);
+
+pub HexDataInner: String =  <s:r#"hex"[0-9a-fA-F]+""#>  => s.trim_start_matches("hex").trim_matches('\"').to_string();
+
+pub StringInner: String = <s:r#""((\\("|\\|n|t|(x[0-9A-F][0-9A-F])|(u\{[0-9A-F][0-9A-F][0-9A-F][0-9A-F]\})|[ \n\t\r\f]+\\))|[^"\n\\])*""#> => {
+    let escape_ignore_reg = Regex::new("\\\\[ \\n\\t\\r\\f]+\\\\").unwrap();
+    let mut s = String::from(escape_ignore_reg.replace(s, ""));
+    s.remove(0);
+    s.pop();
+    frontend::unescape::unescape_str_wrap_error(s.as_str())
+};
