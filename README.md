@@ -36,7 +36,7 @@ Currently, we propose a universal technical solution to be adapted to any progra
 
 ## Installation
 
-Instructions about how to build and install the Smart Intermediate Representation compiler can be found in the [Development Guide](./doc/Development_Duide.md)
+Instructions about how to build and install the Smart Intermediate Representation compiler can be found in the [Development Guide](./doc/Development_Guide.md)
 
 ## Quick Start
 
