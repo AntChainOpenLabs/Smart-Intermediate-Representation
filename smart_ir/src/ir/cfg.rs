@@ -346,7 +346,7 @@ impl Type {
     /// Construct a u256 type.
     #[inline]
     pub const fn u256() -> Type {
-        unimplemented!()
+        Type::Primitive(PrimitiveType::Int(IntType::U256))
     }
 
     /// Construct a i8 type.
@@ -377,7 +377,7 @@ impl Type {
     /// Construct a i256 type.
     #[inline]
     pub const fn i256() -> Type {
-        unimplemented!()
+        Type::Primitive(PrimitiveType::Int(IntType::I256))
     }
 
     pub const fn vec_iter() -> Type {

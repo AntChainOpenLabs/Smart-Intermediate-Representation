@@ -1,0 +1,19 @@
+[package]
+name = "yul_to_ir"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+path = "src/lib.rs"
+
+[build-dependencies]
+lalrpop = "0.20.0"
+
+[dependencies]
+num-bigint = "0.4"
+smart_ir = { path = "../smart_ir" }
+lalrpop-util = { version = "0.20.0", features = ["lexer", "unicode"] }
+regex = "1.10.2"
+indexmap = "1.0"
