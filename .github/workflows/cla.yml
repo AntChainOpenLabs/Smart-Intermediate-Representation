@@ -17,7 +17,7 @@ jobs:
           # the below token should have repo scope and must be manually added by you in the repository's secret
           PERSONAL_ACCESS_TOKEN : ${{ secrets.ANTCHAIN_BOT_TOKEN }}
         with:
-          path-to-document: 'https://github.com/AntChainOpenLabs/Smart-Intermediate-Representation/.github/blob/main/CLA.md' # e.g. a CLA or a DCO document
+          path-to-document: 'https://github.com/AntChainOpenLabs/Smart-Intermediate-Representation/blob/main/.github/CLA.md' # e.g. a CLA or a DCO document
 
           # branch should not be protected
           lock-pullrequest-aftermerge: True
