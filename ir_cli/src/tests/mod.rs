@@ -2,6 +2,7 @@
 // Copyright (c) The Smart Intermediate Representation Contributors
 // SPDX-License-Identifier: Apache-2.0
 
+mod e2e;
 mod examples;
 
 use smart_ir::abi::params::ABIParam;

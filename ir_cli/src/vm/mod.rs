@@ -18,6 +18,7 @@ use std::fmt;
 use std::fs::File;
 use std::io::Write;
 use std::panic::UnwindSafe;
+use std::sync::Once;
 use std::{cell::RefCell, collections::HashMap};
 
 use bstr::ByteSlice;
@@ -38,6 +39,8 @@ use smart_ir::runtime::vm::*;
 pub static WASM_IR: [&[u8]; 1] = [include_bytes!(
     "../../../smart_ir/src/runtime/stdlib/wasm/storage_t.bc"
 )];
+
+pub static INIT_EXTEND_CONTEXT_ONCE: Once = Once::new();
 
 // ----------------------------------------------
 // Integration IR mock runtime tests
@@ -67,7 +70,10 @@ pub struct MockRuntime {
 }
 
 pub fn init_mock_runtime() {
-    set_extend_context(Box::new(MockExtendContext::new()));
+    info!("build_mock_runtime at {:?}", Local::now());
+    INIT_EXTEND_CONTEXT_ONCE.call_once(|| {
+        set_extend_context(Box::new(MockExtendContext::new()));
+    });
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -5,7 +5,6 @@
 use crate::tests::{encode, VERSION};
 use crate::vm::build_mock_runtime;
 use smart_ir::abi::params::ABIParam;
-use smart_ir::encoding::datastream::ParamType;
 
 #[test]
 fn simple_hello_world_contract() {
