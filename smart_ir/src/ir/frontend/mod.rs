@@ -189,7 +189,7 @@ pub enum Expr {
     Label(u128),
     Type(Box<Type>),
     Instr(Box<SimpleInstr>),
-    Invoke(String, Box<Exprs>),
+    Invoke(String, Box<Exprs>, Box<Type>),
     Ident(u128, Box<Type>),
     Bool(bool),
     Int(Box<IntValue>),

@@ -668,7 +668,7 @@ fn translate_call_instr(module: &mut cfg::Module, instr: &frontend::SimpleInstr)
     match instr.args.as_ref() {
         frontend::Exprs::None => panic!("illegal call instr: {instr:?}"),
         frontend::Exprs::Some(invoke, next) => {
-            if let (frontend::Expr::Invoke(name, args), frontend::Exprs::None) =
+            if let (frontend::Expr::Invoke(name, args, ret), frontend::Exprs::None) =
                 (invoke.as_ref(), next.as_ref())
             {
                 let mut cur_args = args.as_ref();
@@ -690,7 +690,7 @@ fn translate_call_instr(module: &mut cfg::Module, instr: &frontend::SimpleInstr)
                     inner: cfg::InstrDescription::call(
                         func_name,
                         cfg_args,
-                        translate_type(module, &instr.ret),
+                        translate_type(module, &ret),
                     ),
                     metadata: translate_metadatas(instr.metadatas.as_ref()),
                 }
