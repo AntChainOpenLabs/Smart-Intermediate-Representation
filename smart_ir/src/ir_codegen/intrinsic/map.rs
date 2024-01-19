@@ -196,7 +196,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let map_field = self
             .builder
             .build_struct_gep(
-                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
                 iter_ptr.into_pointer_value(),
                 0,
                 "",
@@ -221,7 +221,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",
@@ -244,7 +244,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let map_field = self
             .builder
             .build_struct_gep(
-                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
                 iter_ptr.into_pointer_value(),
                 0,
                 "",
@@ -253,7 +253,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let map_ptr = self
             .builder
             .build_load(
-                self.llvm_context.get_struct_type(Q_MAP_LLVM_TY).unwrap(),
+                self.ptr_type_to(self.module.get_struct_type(Q_MAP_LLVM_TY).unwrap().into()),
                 map_field,
                 "",
             )
@@ -262,7 +262,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",
@@ -272,7 +272,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_ptr = self
             .builder
             .build_load(
-                self.llvm_context.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
+                self.ptr_type_to(self.module.get_struct_type(Q_HASHTBL_OBJ_S).unwrap().into()),
                 obj_field,
                 "",
             )
@@ -296,7 +296,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",
@@ -306,7 +306,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_ptr = self
             .builder
             .build_load(
-                self.llvm_context.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
+                self.ptr_type_to(self.module.get_struct_type(Q_HASHTBL_OBJ_S).unwrap().into()),
                 obj_field,
                 "",
             )
@@ -315,7 +315,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let key_field = self
             .builder
             .build_struct_gep(
-                self.llvm_context.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
+                self.module.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
                 obj_ptr.into_pointer_value(),
                 1,
                 "",
@@ -357,7 +357,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.llvm_context.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",
@@ -367,7 +367,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_ptr = self
             .builder
             .build_load(
-                self.llvm_context.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
+                self.ptr_type_to(self.module.get_struct_type(Q_HASHTBL_OBJ_S).unwrap().into()),
                 obj_field,
                 "",
             )
@@ -376,7 +376,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let value_field = self
             .builder
             .build_struct_gep(
-                self.llvm_context.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
+                self.module.get_struct_type(Q_HASHTBL_OBJ_S).unwrap(),
                 obj_ptr.into_pointer_value(),
                 2,
                 "",

@@ -167,7 +167,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let vec_ptr = self
             .builder
             .build_load(
-                self.module.get_struct_type(Q_VEC_LLVM_TY).unwrap(),
+                self.ptr_type_to(self.module.get_struct_type(Q_VEC_LLVM_TY).unwrap().into()),
                 vec_field,
                 "",
             )
@@ -186,7 +186,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_ptr = self
             .builder
             .build_load(
-                self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap(),
+                self.ptr_type_to(self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap().into()),
                 obj_field,
                 "",
             )
@@ -219,7 +219,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_ptr = self
             .builder
             .build_load(
-                self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap(),
+                self.ptr_type_to(self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap().into()),
                 obj_field,
                 "",
             )
@@ -269,7 +269,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_ptr = self
             .builder
             .build_load(
-                self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap(),
+                self.ptr_type_to(self.module.get_struct_type(Q_VECTOR_OBJ_S).unwrap().into()),
                 obj_field,
                 "",
             )
