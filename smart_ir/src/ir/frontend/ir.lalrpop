@@ -182,6 +182,7 @@ SimpleInstr: Box<frontend::SimpleInstr> = {
 
 Exprs: Box<frontend::Exprs> = {
         => Box::new(frontend::Exprs::None),
+    <expr:Expr>  => Box::new(frontend::Exprs::Some(expr, Box::new(frontend::Exprs::None),)),
     <expr:Expr> "," <exprs:Exprs> => Box::new(frontend::Exprs::Some(expr, exprs)),
 }
 
