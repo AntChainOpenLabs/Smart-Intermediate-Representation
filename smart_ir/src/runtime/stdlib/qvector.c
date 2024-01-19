@@ -1025,4 +1025,5 @@ remove_at(qvector_t *vector, int index)
     return true;
 }
 
+void qvector_iter_used_marker(struct qvector_iter dummy) {}
 #endif

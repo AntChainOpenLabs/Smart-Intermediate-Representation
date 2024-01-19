@@ -88,6 +88,7 @@
 #include "./qinternal.h"
 #include "./qhash.h"
 #include "./qhashtbl.h"
+#include "qvector.h"
 
 #define DEFAULT_INDEX_RANGE (100) /*!< default value of hash-index range */
 
@@ -615,3 +616,5 @@ qhashtbl_free(qhashtbl_t *tbl)
     free(tbl->slots);
     free(tbl);
 }
+
+void qhashtbl_iter_used_marker(struct qhashtbl_iter dummy) {}
