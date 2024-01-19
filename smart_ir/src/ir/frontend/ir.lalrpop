@@ -161,6 +161,7 @@ Instrs: Box<frontend::Instrs> = {
 }
 
 Instr: Box<frontend::Instr> = {
+    "let" "%" <id:Num> ":" <ty:Type> <metadatas: MetaDatas> => Box::new(frontend::Instr::Declaration(id, None, ty, metadatas)),
     "let" "%" <id:Num> ":" <ty:Type> <metadatas: MetaDatas> "=" <expr:Expr>  => Box::new(frontend::Instr::Declaration(id, Some(expr), ty, metadatas)),
     "%" <id:Num> <metadatas: MetaDatas> "=" <expr:Expr> => Box::new(frontend::Instr::Assignment(id, expr, metadatas)),
     <instr:SimpleInstr> => Box::new(frontend::Instr::Simple(instr)),
@@ -190,7 +191,7 @@ Expr: Box<frontend::Expr> = {
     "bb" <id:Num> => Box::new(frontend::Expr::Label(id)),
     "%" <id:Num> ":" <ty:Type> => Box::new(frontend::Expr::Ident(id,ty)),
     <ty:Type> => Box::new(frontend::Expr::Type(ty)),
-    "@" <name:Name> "(" <exprs:Exprs> ")" <ret:RetType> => Box::new(frontend::Expr::Invoke(name,exprs)),
+    "@" <name:Name> "(" <exprs:Exprs> ")" <ret:RetType> => Box::new(frontend::Expr::Invoke(name,exprs,ret)),
     <minus:Minus> <val:Num> ":" <ty:Type> => Box::new(frontend::Expr::Int(Box::new(frontend::IntValue{
         val: val,
         ty: ty,
