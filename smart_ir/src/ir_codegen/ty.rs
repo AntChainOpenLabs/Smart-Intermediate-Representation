@@ -270,7 +270,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         self.ptr_type_to(
             self.module
                 .get_struct_type("struct.storage_path")
-                .unwrap()
+                .expect(INTERNAL_ERROR_MSG)
                 .into(),
         )
     }

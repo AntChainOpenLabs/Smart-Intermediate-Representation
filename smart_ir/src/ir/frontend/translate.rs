@@ -661,6 +661,8 @@ fn map_binary_op(name: &str) -> cfg::BinaryOp {
         "or" => cfg::BinaryOp::Or,
         "bit_or" => cfg::BinaryOp::BitOr,
         "bit_xor" => cfg::BinaryOp::BitXor,
+        "shl" => cfg::BinaryOp::Shl,
+        "shr" => cfg::BinaryOp::Shr,
         _ => panic!("unknown binary op: {name}"),
     }
 }
