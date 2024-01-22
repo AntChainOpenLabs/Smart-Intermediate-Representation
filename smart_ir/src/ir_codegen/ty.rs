@@ -6,7 +6,7 @@ use inkwell::types::{BasicType, BasicTypeEnum, FunctionType, VoidType};
 use inkwell::values::BasicValueEnum;
 
 use super::builtin_constants::{
-    Q_HASHTBL_ITER, Q_MAP_NEW_FUNC_NAME, Q_VECTOR_ITER, Q_VEC_NEW_FUNC_NAME,
+    Q_HASHTBL_OBJ_S, Q_MAP_NEW_FUNC_NAME, Q_VECTOR_OBJ_S, Q_VEC_NEW_FUNC_NAME,
     RUNTIME_CONTEXT_LLVM_TY, VECTOR_NEW_FUNC_NAME,
 };
 use super::context::IR2LLVMCodeGenContext;
@@ -70,19 +70,9 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             Type::Pointer(ptr) => self.ptr_type_to(self.llvm_type(ptr)),
             Type::Def(def) => self.llvm_type(&def.ty),
             Type::Builtin(builtin_ty) => match builtin_ty {
-                BuiltinType::VectorIter => self.ptr_type_to(
-                    self.module
-                        .get_struct_type(Q_VECTOR_ITER)
-                        .expect(INTERNAL_ERROR_MSG)
-                        .into(),
-                ),
+                BuiltinType::VectorIter => self.ptr_type_to(self.vec_iter_struct_type()),
 
-                BuiltinType::MapIter => self.ptr_type_to(
-                    self.module
-                        .get_struct_type(Q_HASHTBL_ITER)
-                        .expect(INTERNAL_ERROR_MSG)
-                        .into(),
-                ),
+                BuiltinType::MapIter => self.ptr_type_to(self.map_iter_struct_type()),
                 BuiltinType::Parampack => self.vec_ptr_type(),
                 BuiltinType::StoragePath => self.i32_type(),
             },
@@ -263,6 +253,64 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
     #[inline]
     pub fn vec_ptr_type(&self) -> BasicTypeEnum<'ctx> {
         self.ptr_type_to(self.vec_type())
+    }
+
+    /*
+        struct.vector.iter {
+            struct.qvector_s* vec,
+            struct.qvector_obj_s* obj,
+        }
+    */
+    #[inline]
+    pub fn vec_iter_struct_type(&self) -> BasicTypeEnum<'ctx> {
+        self.llvm_context
+            .struct_type(
+                &[
+                    self.ptr_type_to(
+                        self.module
+                            .get_struct_type(Q_VEC_LLVM_TY)
+                            .expect(INTERNAL_ERROR_MSG)
+                            .into(),
+                    ),
+                    self.ptr_type_to(
+                        self.module
+                            .get_struct_type(Q_VECTOR_OBJ_S)
+                            .expect(INTERNAL_ERROR_MSG)
+                            .into(),
+                    ),
+                ],
+                true,
+            )
+            .into()
+    }
+
+    /*
+       struct.map.iter {
+           struct.qhashtbl_s* map,
+           struct.qhashtbl_obj_s* obj,
+       }
+    */
+    #[inline]
+    pub fn map_iter_struct_type(&self) -> BasicTypeEnum<'ctx> {
+        self.llvm_context
+            .struct_type(
+                &[
+                    self.ptr_type_to(
+                        self.module
+                            .get_struct_type(Q_MAP_LLVM_TY)
+                            .expect(INTERNAL_ERROR_MSG)
+                            .into(),
+                    ),
+                    self.ptr_type_to(
+                        self.module
+                            .get_struct_type(Q_HASHTBL_OBJ_S)
+                            .expect(INTERNAL_ERROR_MSG)
+                            .into(),
+                    ),
+                ],
+                true,
+            )
+            .into()
     }
 
     #[inline]
