@@ -7,7 +7,7 @@ use inkwell::values::BasicValueEnum;
 
 use crate::ir::cfg::Type;
 use crate::ir_codegen::builtin_constants::{
-    Q_VECTOR_ITER, Q_VECTOR_OBJ_S, Q_VEC_NEW_FUNC_NAME, Q_VEC_SLICE_FUNC_NAME,
+    Q_VECTOR_OBJ_S, Q_VEC_NEW_FUNC_NAME, Q_VEC_SLICE_FUNC_NAME,
 };
 use crate::ir_codegen::context::IR2LLVMCodeGenContext;
 use crate::ir_codegen::encoding::MALLOC_FUNC_NAME;
@@ -97,9 +97,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let vec_ptr = *params.get(0).unwrap();
 
         let iter_size = self
-            .module
-            .get_struct_type(Q_VECTOR_ITER)
-            .unwrap()
+            .vec_iter_struct_type()
             .size_of()
             .unwrap()
             .const_cast(self.i32_type().into_int_type(), false);
@@ -110,7 +108,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let vec_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                self.vec_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 0,
                 "",
@@ -135,7 +133,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                self.vec_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",
@@ -158,7 +156,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let vec_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                self.vec_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 0,
                 "",
@@ -176,7 +174,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                self.vec_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",
@@ -209,7 +207,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                self.vec_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",
@@ -259,7 +257,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_VECTOR_ITER).unwrap(),
+                self.vec_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",

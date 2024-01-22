@@ -5,7 +5,6 @@
 use inkwell::{types::BasicType, values::BasicValueEnum};
 
 use crate::ir::cfg::Type;
-use crate::ir_codegen::builtin_constants::Q_HASHTBL_ITER;
 use crate::ir_codegen::traits::{BaseTypeMethods, BuilderMethods};
 use crate::ir_codegen::ty::Q_MAP_LLVM_TY;
 use crate::ir_codegen::{
@@ -183,9 +182,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let map_ptr = *params.get(0).unwrap();
 
         let iter_size = self
-            .llvm_context
-            .get_struct_type(Q_HASHTBL_ITER)
-            .unwrap()
+            .map_iter_struct_type()
             .size_of()
             .unwrap()
             .const_cast(self.i32_type().into_int_type(), false);
@@ -196,7 +193,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let map_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.map_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 0,
                 "",
@@ -221,7 +218,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.map_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",
@@ -244,7 +241,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let map_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.map_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 0,
                 "",
@@ -262,7 +259,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.map_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",
@@ -296,7 +293,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.map_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",
@@ -357,7 +354,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         let obj_field = self
             .builder
             .build_struct_gep(
-                self.module.get_struct_type(Q_HASHTBL_ITER).unwrap(),
+                self.map_iter_struct_type(),
                 iter_ptr.into_pointer_value(),
                 1,
                 "",

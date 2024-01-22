@@ -47,7 +47,6 @@ extern "C" {
 /* types */
 typedef struct qhashtbl_s qhashtbl_t;
 typedef struct qhashtbl_obj_s qhashtbl_obj_t;
-typedef struct qhashtbl_iter qhashtbl_iter_t;
 
 struct qhashtbl_iter {
     struct qhashtbl_s* tbl;
