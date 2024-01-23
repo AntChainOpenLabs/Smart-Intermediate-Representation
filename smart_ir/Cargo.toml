@@ -17,7 +17,7 @@ indexmap = "1.0"
 lalrpop-util = { version = "0.20.0", features = ["lexer"] }
 downcast-rs = "1.2.0"
 smart_ir_macro = { path = "../smart_ir_macro", version = "0.3.0" }
-inkwell = { git = "https://github.com/TheDan64/inkwell", features = [
+inkwell = { git = "https://github.com/TheDan64/inkwell", rev = "4f18389938292f6db34b0be6646452e034bb6ec2", features = [
     "target-webassembly",
     "llvm15-0-force-static",
 ] }
@@ -37,7 +37,7 @@ home = "0.5.4"
 once_cell = "1.10"
 byteorder = "1.4.3"
 compiler_base_span = "0.0.1"
-compiler_base_session = "0.0.11"
+compiler_base_session = "0.0.13"
 compiler_base_parallel = "0.0.2"
 compiler_base_error = "0.0.8"
 nano-leb128 = "0.1.0"
