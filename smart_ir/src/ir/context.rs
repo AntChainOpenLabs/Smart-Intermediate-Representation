@@ -113,7 +113,7 @@ impl IRContext {
             Type::Array { elem: _, len: _ } => IR_RUNTIME_ARRAY_TYPE,
             Type::Map { key: _, value: _ } => IR_RUNTIME_MAP_TYPE,
             Type::Compound(_) => unimplemented!(),
-
+            Type::Tuple(_) => unimplemented!(),
             Type::Builtin(_) => unimplemented!(),
         }) as u32
     }

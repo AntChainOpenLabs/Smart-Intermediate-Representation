@@ -242,6 +242,7 @@ impl Literal {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TypeDefinitionKind {
     Struct,
+    Tuple,
     Enum,
     Builtin,
     Alias,
@@ -296,6 +297,7 @@ pub enum Type {
     Map { key: Rc<Type>, value: Rc<Type> },
     Array { elem: Rc<Type>, len: Option<u32> },
     Compound(Rc<Vec<Field>>),
+    Tuple(Rc<Vec<Type>>),
     Pointer(Rc<Type>),
     Def(Rc<TypeDefinition>),
     Builtin(BuiltinType),
@@ -488,6 +490,7 @@ impl Display for Type {
                 None => write!(f, "[{elem}]"),
             },
             Type::Compound(_) => unimplemented!(),
+            Type::Tuple(_) => unimplemented!(),
             Type::Pointer(elem) => write!(f, "{elem}*"),
             Type::Def(def) => write!(f, "{}", def.name),
             Type::Builtin(builtin_ty) => match builtin_ty {

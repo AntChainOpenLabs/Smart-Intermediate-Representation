@@ -16,8 +16,8 @@ macro_rules! create_variant_intrinsic {
     };
 }
 
-// Vector
 pub fn initialize_intrinisic_func_names() {
+    // Vector
     create_variant_intrinsic!(IR_VECTOR_SET, "ir.vector.set");
     create_variant_intrinsic!(IR_VECTOR_GET, "ir.vector.get");
     create_variant_intrinsic!(IR_VECTOR_CREATE_ITER, "ir.vector.create_iter");
@@ -34,6 +34,12 @@ pub fn initialize_intrinisic_func_names() {
     create_variant_intrinsic!(IR_VECTOR_AT, "ir.vector.at");
     create_variant_intrinsic!(IR_VECTOR_SLICE, "ir.vector.slice");
     create_variant_intrinsic!(IR_VECTOR_TO_STR, "ir.vector.to_str");
+
+    // Tuple
+    create_variant_intrinsic!(IR_TUPLE_SET, "ir.tuple.set");
+    create_variant_intrinsic!(IR_TUPLE_GET, "ir.tuple.get");
+    create_variant_intrinsic!(IR_TUPLE_LEN, "ir.tuple.len");
+    create_variant_intrinsic!(IR_TUPLE_AT, "ir.tuple.at");
 
     // Map
     create_variant_intrinsic!(IR_MAP_SET, "ir.map.set");
