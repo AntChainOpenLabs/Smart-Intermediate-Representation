@@ -149,7 +149,7 @@ impl Yul2IRContext {
             1 => self.walk_identifier(&assign.identifiers[0])?,
             _ => {
                 return Err(ASTLoweringError {
-                    message: "not support".to_string(),
+                    message: "not support multiple assign".to_string(),
                 })
             }
         };
@@ -186,7 +186,7 @@ impl Yul2IRContext {
             ),
             _ => {
                 return Err(ASTLoweringError {
-                    message: "not support".to_string(),
+                    message: "not support multiple decl".to_string(),
                 })
             }
         };
@@ -597,7 +597,7 @@ impl Yul2IRContext {
         *self.return_data_id.borrow_mut() = id;
         vars.insert(id, mem_data_ty());
 
-        let ret = match function.returns.len() {
+        let ret = match function.returns.clone().len() {
             0 => Type::void(),
             1 => {
                 let ret_ty = self.parse_ty_name(&function.returns[0].type_name);
@@ -609,9 +609,18 @@ impl Yul2IRContext {
                 ret_ty
             }
             _ => {
-                return Err(ASTLoweringError {
-                    message: "not support".to_string(),
-                })
+                let mut tuple_ty = vec![];
+                for ret_ty in function.returns.clone() {
+                    let parsed_ret_ty = self.parse_ty_name(&ret_ty.type_name);
+                    let id = self.ir_context.builder.get_ident_id();
+                    let ret_name = &ret_ty.identifier.name;
+                    self.vars.borrow_mut().insert(ret_name.clone(), id);
+                    vars.insert(id, parsed_ret_ty.clone());
+                    self.ret_var_has_init.borrow_mut().insert(id, false);
+                    tuple_ty.push(parsed_ret_ty);
+                }
+
+                Type::Tuple(Rc::new(tuple_ty))
             }
         };
 
@@ -638,9 +647,20 @@ impl Yul2IRContext {
                     .build_ret(Some(self.ir_context.builder.build_identifier(&id)))
             }
             _ => {
-                return Err(ASTLoweringError {
-                    message: "not support".to_string(),
-                })
+                self.ir_context.builder.build_call(
+                    get_intrinsic_func_by_key(IntrinsicFuncName::IR_TUPLE_SET)
+                        .unwrap()
+                        .into(),
+                    vec![],
+                    cfg::Type::void(),
+                );
+
+                // TODO: support return tuple
+                let ret_name = &function.returns[0].identifier.name;
+                let id = self.vars.borrow().get(ret_name).unwrap().clone();
+                self.ir_context
+                    .builder
+                    .build_ret(Some(self.ir_context.builder.build_identifier(&id)))
             }
         }
         self.ir_context.func_end();

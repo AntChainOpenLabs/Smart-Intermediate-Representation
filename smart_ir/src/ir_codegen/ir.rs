@@ -376,9 +376,11 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 }
                 Type::Array { elem, len } => Ok(self.build_vector_new(elem, len)),
                 Type::Compound(_) => unimplemented!(),
+                Type::Tuple(_) => unimplemented!(),
                 Type::Pointer(_) => unimplemented!(),
                 Type::Def(def) => match def.kind {
                     TypeDefinitionKind::Struct => Ok(self.type_default_ptr_value(&def.ty)),
+                    TypeDefinitionKind::Tuple => unimplemented!(),
                     TypeDefinitionKind::Enum => unimplemented!(),
                     TypeDefinitionKind::Builtin => unimplemented!(),
                     TypeDefinitionKind::Alias => unimplemented!(),

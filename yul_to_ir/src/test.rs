@@ -269,8 +269,9 @@ fn yul2ir() {
                             emitTransfer(from, to, amount)
                         }
 
-                        function selector() -> s {
+                        function selector() -> s, z {
                             s := div(calldataload(0), 0x100000000000000000000000000000000000000000000000000000000)
+                            z := div(calldataload(0), 0x100000000000000000000000000000000000000000000000000000000)
                         }
             
                         function decodeAsAddress(offset) -> v {

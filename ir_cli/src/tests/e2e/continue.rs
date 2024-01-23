@@ -115,57 +115,57 @@ fn simple_vector_for_with_continue() {
     // Contract method call.
 }
 
-// #[test]
-// fn simple_map_for_with_continue() {
-//     let mut runtime_and_abi = build_mock_runtime(
-//         r#"module_name = "SimpleMapContract"
-//         contract SimpleMapContract {
-//             state {
-//             }
-//             pub fn SimpleMapContract.SimpleMapContract.init()  {
-//                 0:
-//                     ret()
-//             }
-//
-//             pub fn SimpleMapContract.SimpleMapContract.simple_map(%0: {str: u64}, ) -> u64 {
-//                 1:
-//                     call(@ir.map.insert(%0: {str: u64}, "k2": str, 20: u64, ) -> bool, ) !ir_debug_location !0
-//                     call(@ir.map.insert(%0: {str: u64}, "k3": str, 30: u64, ) -> bool, ) !ir_debug_location !1
-//                     let %1: u64 !ir_debug_location !2 = 0: u64
-//                     let %2: %ir.map.iter !ir_debug_location !3 = call(@ir.map.create_iter(%0: {str: u64}, ) -> %ir.map.iter, )
-//                     br(bb 2, ) !ir_debug_location !3
-//                 2:
-//                     br_if(call(@ir.map.get_next(%2: %ir.map.iter, ) -> bool, ) , bb 3, bb 4, ) !ir_debug_location !3
-//                 3:
-//                     let %3: str !ir_debug_location !3 = call(@ir.map.obj_key(%2: %ir.map.iter, ) -> str, )
-//                     let %4: u64 !ir_debug_location !3 = call(@ir.map.obj_value(%2: %ir.map.iter, ) -> u64, )
-//                     br_if(ne(%1: u64, 30: u64, ) , bb 5, bb 6, ) !ir_debug_location !4
-//                 4:
-//                     ret(%1: u64, ) !ir_debug_location !7
-//                 5:
-//                     br(bb 2, ) !ir_debug_location !5
-//                 6:
-//                     %1 !ir_debug_location !6 = add(%1: u64, %4: u64, )
-//                     br(bb 2, ) !ir_debug_location !6
-//             }
-//
-//         }
-//         meta !0 = !{4: u32, 4: u32, "test.sonar": str, }
-//         meta !1 = !{5: u32, 5: u32, "test.sonar": str, }
-//         meta !2 = !{6: u32, 6: u32, "test.sonar": str, }
-//         meta !3 = !{7: u32, 12: u32, "test.sonar": str, }
-//         meta !4 = !{8: u32, 10: u32, "test.sonar": str, }
-//         meta !5 = !{9: u32, 9: u32, "test.sonar": str, }
-//         meta !6 = !{11: u32, 11: u32, "test.sonar": str, }
-//         meta !7 = !{13: u32, 13: u32, "test.sonar": str, }
-//         "#,
-//     );
-//     let mut runtime = runtime_and_abi.0;
-//     let abi = runtime_and_abi.1;
-//     // ABI
-//     assert_eq!(abi.methods.len(), 2);
-//     assert_eq!(abi.methods[1].inputs.len(), 1);
-//     // Deploy contract and call contract constructor.
-//     runtime.constructor(hex::decode("00").unwrap().as_slice());
-//     // Contract method call.
-// }
+#[test]
+fn simple_map_for_with_continue() {
+    let mut runtime_and_abi = build_mock_runtime(
+        r#"module_name = "SimpleMapContract"
+        contract SimpleMapContract {
+            state {
+            }
+            pub fn SimpleMapContract.SimpleMapContract.init()  {
+                0:
+                    ret()
+            }
+
+            pub fn SimpleMapContract.SimpleMapContract.simple_map(%0: {str: u64}, ) -> u64 {
+                1:
+                    call(@ir.map.insert(%0: {str: u64}, "k2": str, 20: u64, ) -> bool, ) !ir_debug_location !0
+                    call(@ir.map.insert(%0: {str: u64}, "k3": str, 30: u64, ) -> bool, ) !ir_debug_location !1
+                    let %1: u64 !ir_debug_location !2 = 0: u64
+                    let %2: %ir.map.iter !ir_debug_location !3 = call(@ir.map.create_iter(%0: {str: u64}, ) -> %ir.map.iter, )
+                    br(bb 2, ) !ir_debug_location !3
+                2:
+                    br_if(call(@ir.map.get_next(%2: %ir.map.iter, ) -> bool, ) , bb 3, bb 4, ) !ir_debug_location !3
+                3:
+                    let %3: str !ir_debug_location !3 = call(@ir.map.obj_key(%2: %ir.map.iter, ) -> str, )
+                    let %4: u64 !ir_debug_location !3 = call(@ir.map.obj_value(%2: %ir.map.iter, ) -> u64, )
+                    br_if(ne(%1: u64, 30: u64, ) , bb 5, bb 6, ) !ir_debug_location !4
+                4:
+                    ret(%1: u64, ) !ir_debug_location !7
+                5:
+                    br(bb 2, ) !ir_debug_location !5
+                6:
+                    %1 !ir_debug_location !6 = add(%1: u64, %4: u64, )
+                    br(bb 2, ) !ir_debug_location !6
+            }
+
+        }
+        meta !0 = !{4: u32, 4: u32, "test.sonar": str, }
+        meta !1 = !{5: u32, 5: u32, "test.sonar": str, }
+        meta !2 = !{6: u32, 6: u32, "test.sonar": str, }
+        meta !3 = !{7: u32, 12: u32, "test.sonar": str, }
+        meta !4 = !{8: u32, 10: u32, "test.sonar": str, }
+        meta !5 = !{9: u32, 9: u32, "test.sonar": str, }
+        meta !6 = !{11: u32, 11: u32, "test.sonar": str, }
+        meta !7 = !{13: u32, 13: u32, "test.sonar": str, }
+        "#,
+    );
+    let mut runtime = runtime_and_abi.0;
+    let abi = runtime_and_abi.1;
+    // ABI
+    assert_eq!(abi.methods.len(), 2);
+    assert_eq!(abi.methods[1].inputs.len(), 1);
+    // Deploy contract and call contract constructor.
+    runtime.constructor(hex::decode("00").unwrap().as_slice());
+    // Contract method call.
+}

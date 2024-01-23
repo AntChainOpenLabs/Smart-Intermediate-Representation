@@ -154,6 +154,14 @@ impl IRPrinter<'_> {
                 }
                 write!(w, "}}")
             }
+            Type::Tuple(elements) => {
+                write!(w, "(")?;
+                for ele in elements.iter() {
+                    self.print_ty(ele, w)?;
+                    write!(w, ", ")?;
+                }
+                write!(w, ")")
+            }
             Type::Pointer(ptr) => {
                 self.print_ty(ptr.as_ref(), w)?;
                 write!(w, "*")

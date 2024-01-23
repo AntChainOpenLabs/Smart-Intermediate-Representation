@@ -67,6 +67,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                     true,
                 )
                 .into(),
+            Type::Tuple(_) => unimplemented!(),
             Type::Pointer(ptr) => self.ptr_type_to(self.llvm_type(ptr)),
             Type::Def(def) => self.llvm_type(&def.ty),
             Type::Builtin(builtin_ty) => match builtin_ty {
@@ -123,6 +124,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 vector_ptr.into()
             }
             Type::Compound(_) => unreachable!(),
+            Type::Tuple(_) => unreachable!(),
             Type::Pointer(elem_ty) => self.type_default_ptr_value(elem_ty),
             Type::Def(def) => self.type_default_value(&def.ty),
             Type::Builtin(_) => unimplemented!(),
