@@ -148,7 +148,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                     let field = unsafe {
                         self.builder
                             .build_gep(
-                                ptr.get_type(),
+                                llvm_ty,
                                 ptr.into_pointer_value(),
                                 &[
                                     self.llvm_context.i32_type().const_zero(),
