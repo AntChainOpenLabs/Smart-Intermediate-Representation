@@ -58,6 +58,14 @@ pub fn load_stdlib<'a>(context: &'a Context, a: Vec<&'a [u8]>) -> Module<'a> {
 
     let module = Module::parse_bitcode_from_buffer(&memory, context).unwrap();
 
+    for bc in WASM_IR.iter().skip(1) {
+        let memory = MemoryBuffer::create_from_memory_range(bc, "wasm_bc");
+
+        module
+            .link_in_module(Module::parse_bitcode_from_buffer(&memory, context).unwrap())
+            .unwrap();
+    }
+
     for bc in a.iter() {
         let memory = MemoryBuffer::create_from_memory_range(bc, "wasm_bc");
 
@@ -66,13 +74,6 @@ pub fn load_stdlib<'a>(context: &'a Context, a: Vec<&'a [u8]>) -> Module<'a> {
             .unwrap();
     }
 
-    for bc in WASM_IR.iter().skip(1) {
-        let memory = MemoryBuffer::create_from_memory_range(bc, "wasm_bc");
-
-        module
-            .link_in_module(Module::parse_bitcode_from_buffer(&memory, context).unwrap())
-            .unwrap();
-    }
     module
 }
 

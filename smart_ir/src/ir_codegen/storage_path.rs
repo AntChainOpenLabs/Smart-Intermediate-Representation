@@ -333,7 +333,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         self.builder.position_at_end(end_block);
         Ok(self
             .builder
-            .build_load(value_ptr.get_type(), value_ptr, "")
+            .build_load(self.llvm_type(ty), value_ptr, "")
             .unwrap())
     }
 

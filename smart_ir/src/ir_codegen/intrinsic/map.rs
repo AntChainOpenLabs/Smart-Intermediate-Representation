@@ -103,7 +103,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
         );
 
         self.builder
-            .build_load(self.ptr_type_to(self.llvm_type(ret)), data, "")
+            .build_load(self.llvm_type(ret), data, "")
             .unwrap()
     }
 
@@ -385,11 +385,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
             .build_load(self.i8_ptr_type(), value_field, "")
             .unwrap();
         self.builder
-            .build_load(
-                self.ptr_type_to(self.llvm_type(ret)),
-                value_byte.into_pointer_value(),
-                "",
-            )
+            .build_load(self.llvm_type(ret), value_byte.into_pointer_value(), "")
             .unwrap()
     }
 }

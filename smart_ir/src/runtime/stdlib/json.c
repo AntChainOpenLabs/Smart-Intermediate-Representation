@@ -9,6 +9,7 @@
 #include "./cJSON.h"
 #include "./ssz.h"
 #include "./qvector.h"
+#include "math.h"
 
 extern uint32_t
 get_ir_type_size_as_element(struct IRRuntimeClass *runtime_class);
@@ -50,7 +51,7 @@ cjson_to_ir_type(uint32_t runtime_class_offset, cJSON *obj);
     cJSON *ir_builtin_json_encode_##id(void *val)          \
     {                                                         \
         ty v = *(ty *)val;                                    \
-        cJSON *ret = cJSON_CreateNumber((uint256_t)v, (uint256_t) v < (uint256_t) 0); \
+        cJSON *ret = cJSON_CreateNumber((uint256_t)v, (int256_t) v < (int256_t) 0); \
         return ret;                                           \
     }
 

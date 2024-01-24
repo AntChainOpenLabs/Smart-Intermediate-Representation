@@ -23,6 +23,7 @@ use super::{
     builtin_constants::{MEMCMP_FUNC, Q_MAP_NEW_FUNC_NAME, VECTOR_NEW_FUNC_NAME},
     context::{CodeGenError, CompileResult, IR2LLVMCodeGenContext},
     error::FUNCTION_RETURN_VALUE_NOT_FOUND_MSG,
+    traits::BaseTypeMethods,
 };
 
 impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
@@ -397,38 +398,47 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                     .ir_context
                     .ir_expr_ty(self.current_function.borrow().as_ref().unwrap(), ptr);
                 let mut ptr = self.walk_ir_expr(ptr)?;
-                if let Some(Type::Pointer(pointee_ty)) = ptr_ty {
-                    let mut struct_ty = pointee_ty;
+                if ptr_ty.is_some() {
+                    let mut ptr_ty = ptr_ty.as_ref().unwrap();
                     for (i, field_idx) in field_path.iter().enumerate() {
-                        if let Type::Def(def_ty) = struct_ty.as_ref() {
-                            let field_ptr = self
-                                .builder
-                                .build_struct_gep(
-                                    self.llvm_type(&def_ty.ty),
-                                    ptr.into_pointer_value(),
-                                    *field_idx,
-                                    "",
-                                )
-                                .unwrap();
-                            if i + 1 < field_path.len() {
-                                if let Type::Compound(fields) = def_ty.ty.as_ref() {
-                                    struct_ty = fields.get(*field_idx as usize).unwrap().ty.clone();
-                                    ptr = self
-                                        .builder
-                                        .build_load(self.llvm_type(&struct_ty), field_ptr, "")
-                                        .unwrap();
+                        if let Type::Pointer(struct_ty) = ptr_ty {
+                            if let Type::Def(def_ty) = struct_ty.as_ref() {
+                                let field_ptr = self
+                                    .builder
+                                    .build_struct_gep(
+                                        self.llvm_type(&def_ty.ty),
+                                        ptr.into_pointer_value(),
+                                        *field_idx,
+                                        "",
+                                    )
+                                    .unwrap();
+                                if i + 1 < field_path.len() {
+                                    if let Type::Compound(fields) = def_ty.ty.as_ref() {
+                                        ptr_ty =
+                                            fields.get(*field_idx as usize).unwrap().ty.as_ref();
+                                        ptr = self
+                                            .builder
+                                            .build_load(self.llvm_type(ptr_ty), field_ptr, "")
+                                            .unwrap();
+                                    } else {
+                                        return Err(CodeGenError {
+                                            message: "wrong type defination".to_string(),
+                                        });
+                                    }
                                 } else {
-                                    return Err(CodeGenError {
-                                        message: "wrong type defination".to_string(),
-                                    });
+                                    ptr = field_ptr.into();
                                 }
                             } else {
-                                ptr = field_ptr.into();
+                                return Err(CodeGenError {
+                                message:
+                                    "try to get field from a pointer whose elemet isn't a struct"
+                                        .to_string(),
+                            });
                             }
                         } else {
                             return Err(CodeGenError {
                                 message:
-                                    "try to get field from a pointer whose elemet isn't a struct"
+                                    "try to get field from a pointer whose elemet isn't a pointer"
                                         .to_string(),
                             });
                         }
@@ -455,39 +465,47 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 let mut ptr = self.walk_ir_expr(ptr)?;
                 let val = self.walk_ir_expr(val)?;
 
-                if let Some(Type::Pointer(pointee_ty)) = ptr_ty {
-                    let mut struct_ty = pointee_ty;
+                if ptr_ty.is_some() {
+                    let mut ptr_ty = ptr_ty.as_ref().unwrap();
                     for (i, field_idx) in field_path.iter().enumerate() {
-                        if let Type::Def(def_ty) = struct_ty.as_ref() {
-                            let field_ptr = self
-                                .builder
-                                .build_struct_gep(
-                                    self.llvm_type(&struct_ty),
-                                    ptr.into_pointer_value(),
-                                    *field_idx,
-                                    "",
-                                )
-                                .unwrap();
-                            if i + 1 < field_path.len() {
-                                if let Type::Compound(fields) = def_ty.ty.as_ref() {
-                                    struct_ty = fields.get(*field_idx as usize).unwrap().ty.clone();
-                                    ptr = self
-                                        .builder
-                                        .build_load(self.llvm_type(&struct_ty), field_ptr, "")
-                                        .unwrap();
+                        if let Type::Pointer(struct_ty) = ptr_ty {
+                            if let Type::Def(def_ty) = struct_ty.as_ref() {
+                                let field_ptr = self
+                                    .builder
+                                    .build_struct_gep(
+                                        self.llvm_type(&struct_ty),
+                                        ptr.into_pointer_value(),
+                                        *field_idx,
+                                        "",
+                                    )
+                                    .unwrap();
+                                if i + 1 < field_path.len() {
+                                    if let Type::Compound(fields) = def_ty.ty.as_ref() {
+                                        ptr_ty =
+                                            fields.get(*field_idx as usize).unwrap().ty.as_ref();
+                                        ptr = self
+                                            .builder
+                                            .build_load(self.llvm_type(ptr_ty), field_ptr, "")
+                                            .unwrap();
+                                    } else {
+                                        return Err(CodeGenError {
+                                            message: "wrong type defination".to_string(),
+                                        });
+                                    }
                                 } else {
-                                    return Err(CodeGenError {
-                                        message: "wrong type defination".to_string(),
-                                    });
+                                    ptr = field_ptr.into();
                                 }
                             } else {
-                                ptr = field_ptr.into();
-                            }
-                        } else {
-                            return Err(CodeGenError {
+                                return Err(CodeGenError {
                                 message:
                                     "try to get field from a pointer whose elemet isn't a struct"
                                         .to_string(),
+                            });
+                            }
+                        } else {
+                            return Err(CodeGenError {
+                                message: "try to set field to value which isn't a pointer"
+                                    .to_string(),
                             });
                         }
                     }
@@ -644,7 +662,6 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 let ty = self
                     .get_variable_ty(&name)
                     .unwrap_or_else(|| panic!("can't find variable %{name}"));
-
                 let res = self.builder.build_load(ty, ptr, "").unwrap();
                 Ok(res)
             }

@@ -121,8 +121,8 @@ __init_heap()
         // disable re-call abi using the same vm(memory not free)
         return;
     }
-    //heap_ptr = __builtin_wasm_memory_grow(0, 0) * WASM_PAGE_SIZE;
-    //heap_top = __builtin_wasm_memory_grow(0, 1) * WASM_PAGE_SIZE;
+    heap_ptr = __builtin_wasm_memory_grow(0, 0) * WASM_PAGE_SIZE;
+    heap_top = __builtin_wasm_memory_grow(0, 1) * WASM_PAGE_SIZE;
     init_free();
 
     void* tmp = __malloc(1); // malloc 1 byte to let memory grow to available size
@@ -192,9 +192,9 @@ ____malloc_new_allocation(size_t size)
 
     if (heap_ptr >= heap_top) {
         unsigned int pages = (block_size / WASM_PAGE_SIZE) + 1;
-       // if (__builtin_wasm_memory_grow(0, pages) == -1) {
-        //    __abort("__malloc: failed");
-        //};
+        if (__builtin_wasm_memory_grow(0, pages) == -1) {
+            __abort("__malloc: failed");
+        };
         heap_top += (pages * WASM_PAGE_SIZE);
     }
 

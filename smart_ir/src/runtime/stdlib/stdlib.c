@@ -632,7 +632,7 @@ int256_t __strtoi256(const char *__restrict nptr,
      * Set any if any `digits' consumed; make it negative to indicate
      * overflow.
      */
-    cutoff = neg ? -(int256_t) INT256_MIN : INT256_MAX;
+    cutoff = neg ? -(uint256_t) INT256_MIN : INT256_MAX;
 
     cutoff =  div256_u256_rem((uint256_t) cutoff, (uint256_t) base, &cutlim);
     for (acc = 0, any = 0;; c = *s++) {
