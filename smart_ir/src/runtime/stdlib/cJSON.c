@@ -556,6 +556,8 @@ static void i256tos(unsigned char *number_buffer, uint256_t decimal, size_t leng
         signed_decimal = div256_u256_rem(-signed_decimal, (int256_t)10, &rem);
         number_buffer[length - 1] =(int256_t) rem + (int256_t)(int32_t)'0' + (int256_t)1; // should be '8'
         i = 1;
+        (*number_buffer) = '-';
+        neg_flag = 1;
     }
 
     if (signed_decimal < (int256_t) 0) {
@@ -567,7 +569,7 @@ static void i256tos(unsigned char *number_buffer, uint256_t decimal, size_t leng
     for (; i < ((size_t)length) - neg_flag; i++)
     {
         uint256_t rem;
-        signed_decimal = div256_u256_rem(-signed_decimal, (int256_t)10, &rem);
+        signed_decimal = div256_u256_rem(signed_decimal, (int256_t)10, &rem);
         number_buffer[length - i - 1] = (int256_t)rem + (int256_t) '0';
     }
 }
