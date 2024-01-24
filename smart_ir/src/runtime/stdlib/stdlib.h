@@ -28,7 +28,7 @@ typedef _ExtInt(256) int256_t;
 #define UINT128_MAX (((__uint128_t)INT128_MAX << 1) + 1)
 
 #define INT256_MAX (int256_t) (((uint256_t) 1 << (uint256_t)((2 * __SIZEOF_INT128__ * __CHAR_BIT__) - 1)) - (uint256_t)1)
-#define INT256_MIN ((int256_t)0 - ((int256_t)1 << (int256_t)126) - ((int256_t)1 << (int256_t)126))
+#define INT256_MIN (-(INT256_MAX)-(int256_t)1)
 #define UINT256_MAX (((uint256_t)INT256_MAX << (uint256_t)1) + (uint256_t)1)
 
 /*
