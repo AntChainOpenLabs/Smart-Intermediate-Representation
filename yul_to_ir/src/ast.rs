@@ -139,6 +139,13 @@ pub struct FunctionDefinition {
     pub returns: Vec<TypedIdentifier>,
 }
 
+#[derive(Debug, Clone)]
+pub struct FunctionDeclaration {
+    pub name: Identifier,
+    pub params: Vec<TypedIdentifier>,
+    pub returns: Vec<TypedIdentifier>,
+}
+
 pub type TypedIdentifierList = Vec<TypedIdentifier>;
 
 #[derive(Debug, Clone)]

@@ -5,6 +5,32 @@
 use crate::context::Yul2IRContext;
 use crate::yul;
 use smart_ir::ir::printer::IRPrinter;
+#[test]
+fn yul_parser_tuple_test() {
+    let expr = yul::ObjectParser::new().parse(
+        r#"
+        object "Token" {
+            code {
+                function selector_ret() -> s, z {
+                    s := div(calldataload(0), 0x100000000000000000000000000000000000000000000000000000000)
+                    z := div(calldataload(0), 0x100000000000000000000000000000000000000000000000000000000)
+                }
+
+                function selector_call() {
+                    let a, b := selector_ret()
+                }
+            }
+        }
+        "#,
+    ).unwrap();
+    println!("{:?}", expr);
+    let mut context = Yul2IRContext::new_with_object(expr);
+    context.transform().unwrap();
+    let mut p = IRPrinter::new(&context.ir_context);
+    let mut w = String::new();
+    p.print_modules(&mut w).unwrap();
+    println!("{}", w);
+}
 
 #[test]
 fn yul_parser_erc20_test() {
@@ -269,9 +295,8 @@ fn yul2ir() {
                             emitTransfer(from, to, amount)
                         }
 
-                        function selector() -> s, z {
+                        function selector() -> s {
                             s := div(calldataload(0), 0x100000000000000000000000000000000000000000000000000000000)
-                            z := div(calldataload(0), 0x100000000000000000000000000000000000000000000000000000000)
                         }
             
                         function decodeAsAddress(offset) -> v {

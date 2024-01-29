@@ -7,7 +7,7 @@ use std::{cell::RefCell, rc::Rc};
 use indexmap::IndexMap;
 use smart_ir::ir::{builder::IdentifierId, cfg::Type};
 
-use crate::ast::Object;
+use crate::ast::{FunctionDeclaration, Object};
 
 pub const WORD_SIZE: usize = 256 / 8;
 pub const WORD_TY: Type = Type::u256();
@@ -32,6 +32,7 @@ pub struct Yul2IRContext {
     pub return_data_id: RefCell<IdentifierId>,
     pub current_module_name: RefCell<String>,
     pub current_contract_name: RefCell<String>,
+    pub current_func_decls: RefCell<IndexMap<String, FunctionDeclaration>>,
 }
 
 impl Yul2IRContext {
