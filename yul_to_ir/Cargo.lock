@@ -237,6 +237,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "compiler_base_error"
+version = "0.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a26baf92ec0548418efaa8f24124cec069c40107af267a58c017c857b1cd136"
+dependencies = [
+ "anyhow",
+ "compiler_base_macros",
+ "compiler_base_span",
+ "fluent",
+ "pretty_assertions",
+ "rustc_errors",
+ "rustc_span",
+ "termcolor",
+ "unic-langid",
+ "walkdir",
+]
+
+[[package]]
 name = "compiler_base_macros"
 version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -260,12 +278,12 @@ dependencies = [
 
 [[package]]
 name = "compiler_base_session"
-version = "0.0.11"
+version = "0.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "944401b298872958e0a870702a03c548edec476e53dc7ae1dd3eec0490f1f731"
+checksum = "4c62ab4d6f1468aefe2b2e7d7e9da007dd39dbe8017c30e8e5781accfe3cdc49"
 dependencies = [
  "anyhow",
- "compiler_base_error",
+ "compiler_base_error 0.0.10",
  "compiler_base_span",
 ]
 
@@ -807,7 +825,7 @@ dependencies = [
 [[package]]
 name = "inkwell"
 version = "0.2.0"
-source = "git+https://github.com/TheDan64/inkwell#0b2cde9394320ab6f097ef10408d663a28d44be3"
+source = "git+https://github.com/TheDan64/inkwell?rev=4f18389938292f6db34b0be6646452e034bb6ec2#4f18389938292f6db34b0be6646452e034bb6ec2"
 dependencies = [
  "either",
  "inkwell_internals",
@@ -820,7 +838,7 @@ dependencies = [
 [[package]]
 name = "inkwell_internals"
 version = "0.8.0"
-source = "git+https://github.com/TheDan64/inkwell#0b2cde9394320ab6f097ef10408d663a28d44be3"
+source = "git+https://github.com/TheDan64/inkwell?rev=4f18389938292f6db34b0be6646452e034bb6ec2#4f18389938292f6db34b0be6646452e034bb6ec2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1879,7 +1897,7 @@ dependencies = [
  "bstr",
  "byteorder",
  "cc",
- "compiler_base_error",
+ "compiler_base_error 0.0.8",
  "compiler_base_parallel",
  "compiler_base_session",
  "compiler_base_span",

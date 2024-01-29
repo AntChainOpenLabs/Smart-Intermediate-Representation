@@ -390,6 +390,14 @@ impl Type {
         Type::Builtin(BuiltinType::MapIter)
     }
 
+    pub fn tuple(types: Vec<Type>) -> Type {
+        let mut tuple_ele = vec![];
+        for _ty in types {
+            tuple_ele.push(_ty);
+        }
+        Type::Tuple(Rc::new(tuple_ele))
+    }
+
     pub const fn storage_path() -> Type {
         Type::Builtin(BuiltinType::StoragePath)
     }

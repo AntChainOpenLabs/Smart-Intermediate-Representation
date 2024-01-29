@@ -4,6 +4,7 @@
 
 use std::{cell::RefCell, rc::Rc};
 
+use crate::ast::FunctionDeclaration;
 use crate::{
     ast::{
         self, Block, Expression, FunctionCall, FunctionDefinition, Identifier, IfElse,
@@ -14,6 +15,7 @@ use crate::{
 };
 use indexmap::IndexMap;
 use num_bigint::BigInt;
+use smart_ir::ir::cfg::IntLiteral;
 use smart_ir::ir::{
     builder::{IdentifierId, Label},
     cfg::{self, Contract, Expr, Literal, Module, Type},
@@ -185,9 +187,7 @@ impl Yul2IRContext {
                 self.parse_ty_name(&var_decl.identifiers[0].type_name),
             ),
             _ => {
-                return Err(ASTLoweringError {
-                    message: "not support multiple decl".to_string(),
-                })
+                return self.walk_tuple_variable_declaration(var_decl);
             }
         };
 
@@ -206,6 +206,69 @@ impl Yul2IRContext {
         self.ir_context
             .builder
             .build_declaration(id.clone().into(), init_val, ty);
+        self.ok_result()
+    }
+
+    fn walk_tuple_variable_declaration(
+        &self,
+        var_decl: &crate::ast::VariableDeclaration,
+    ) -> CompileResult {
+        let mut ret_tys = vec![];
+        if let Some(value) = &var_decl.value {
+            ret_tys = match value  {
+                Expression::FunctionCall(func) => {
+                    let func_name = self.current_func_decls.borrow();
+                    let func_decl = func_name.get(&func.id.name).clone();
+                    func_decl.unwrap().returns.clone().into_iter().map(
+                        | x | self.parse_ty_name(&x.type_name)
+                    ).collect::<Vec<Type>>()
+                }
+                _ => {
+                    vec![]
+                }
+            };
+        }
+
+        let ty = cfg::Type::tuple(ret_tys);
+
+        let id = self.ir_context.builder.get_ident_id();
+        self.set_id_type(id, ty.clone());
+        let init_val = match &var_decl.value {
+            Some(val) => Some(self.walk_expr(val)?),
+            None => None,
+        };
+
+        self.ir_context
+            .builder
+            .build_declaration(id.clone().into(), init_val, ty);
+
+        let id_expr = Expr::Identifier(id);
+
+        for (index, i) in var_decl.identifiers.iter().enumerate() {
+            let _name = i.identifier.name.clone();
+            let _ty = self.parse_ty_name(&i.type_name);
+            let _id = self.ir_context.builder.get_ident_id();
+            self.vars.borrow_mut().insert(_name, _id);
+            self.set_id_type(_id, _ty.clone());
+
+            let instr = self.ir_context.builder.instr_call(
+                get_intrinsic_func_by_key(IntrinsicFuncName::IR_TUPLE_GET)
+                    .unwrap()
+                    .into(),
+                vec![
+                    id_expr.clone(),
+                    Expr::Literal(Literal::Int(IntLiteral::I32(index as i32))),
+                ],
+                cfg::Type::u256(),
+            );
+
+            self.ir_context.builder.build_declaration(
+                _id.clone().into(),
+                Some(Expr::Instr(Box::new(instr))),
+                _ty,
+            );
+        }
+
         self.ok_result()
     }
 
@@ -232,7 +295,15 @@ impl Yul2IRContext {
         }
         let module_name = self.current_module_name.borrow().clone();
         let contract_name = self.current_contract_name.borrow().clone();
-        let ret_ty = WORD_TY;
+        let current_func_decls = self.current_func_decls.borrow();
+        let mut ret_ty = WORD_TY;
+        if let Some(func_ret_ty) = current_func_decls.get(&func_name) {
+            if func_ret_ty.returns.len() > 1 {
+                ret_ty = Type::tuple(func_ret_ty.returns.clone().into_iter().map(
+                    | x | self.parse_ty_name(&x.type_name)
+                ).collect::<Vec<Type>>());
+            }
+        }
         let mut args = func_call
             .arguments
             .iter()
@@ -432,6 +503,23 @@ impl Yul2IRContext {
             states: IndexMap::new(),
             functions: IndexMap::new(),
         };
+
+        for func in object.code.statements.iter().filter(|stmt| match stmt {
+            crate::ast::Statement::FunctionDefinition(_) => true,
+            _ => false,
+        }) {
+            let mut func_decls = self.current_func_decls.borrow_mut();
+            if let ast::Statement::FunctionDefinition(func_def) = func {
+                func_decls.insert(
+                    func_def.name.name.clone(),
+                    FunctionDeclaration {
+                        name: func_def.name.clone(),
+                        params: func_def.params.clone(),
+                        returns: func_def.returns.clone(),
+                    },
+                );
+            }
+        }
 
         for func in object.code.statements.iter().filter(|stmt| match stmt {
             crate::ast::Statement::FunctionDefinition(_) => true,
