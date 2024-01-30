@@ -1,0 +1,54 @@
+module_name = "ERC20"
+contract ERC20 {
+    state {
+        totalSupply: u64,
+        balances: {str: u64},
+        allowance: {str: {str: u64}},
+    }
+    pub fn ERC20.ERC20.init()  {
+        0:
+            ret() 
+    }
+    
+    pub fn ERC20.ERC20.transfer(%0: str, %1: u64, )  {
+        1:
+            call(@ir.builtin.require(call(@ir.storage.contains_key(get_storage_path("balances": str, call(@ir.builtin.call_sender() -> str, ) , ), ) -> bool, ) , "NO_SUNCH_USER": str, ) -> void, )
+            call(@ir.builtin.require(gt(storage_load(get_storage_path("balances": str, call(@ir.builtin.call_sender() -> str, ) , ), ) -> u64 , %1: u64, ) , "VALUE_NOT_ENOUGH": str, ) -> void, )
+            storage_store(get_storage_path("balances": str, call(@ir.builtin.call_sender() -> str, ) , ), sub(storage_load(get_storage_path("balances": str, call(@ir.builtin.call_sender() -> str, ) , ), ) -> u64 , %1: u64, ) , )
+            storage_store(get_storage_path("balances": str, %0: str, ), add(storage_load(get_storage_path("balances": str, %0: str, ), ) -> u64 , %1: u64, ) , )
+            ret()
+    }
+
+    pub fn ERC20.ERC20.approve(%0: str, %1: u64, )  {
+        2:
+            storage_store(get_storage_path("allowance": str, call(@ir.builtin.call_sender() -> str, ) , %0: str, ), %1: u64, )
+            ret()
+    }
+
+    pub fn ERC20.ERC20.transferFrom(%0: str, %1: str, %2: u64, )  {
+        3:
+            call(@ir.builtin.require(call(@ir.storage.contains_key(get_storage_path("balances": str, %0: str, ), ) -> bool, ) , "NO_SUNCH_USER": str, ) -> void, )
+            call(@ir.builtin.require(gt(storage_load(get_storage_path("balances": str, %0: str, ), ) -> u64 , %2: u64, ) , "VALUE_NOT_ENOUGH": str, ) -> void, )
+            storage_store(get_storage_path("allowance": str, %0: str, call(@ir.builtin.call_sender() -> str, ) , ), sub(storage_load(get_storage_path("allowance": str, %0: str, call(@ir.builtin.call_sender() -> str, ) , ), ) -> u64 , %2: u64, ) , )
+            storage_store(get_storage_path("balances": str, %0: str, ), sub(storage_load(get_storage_path("balances": str, %0: str, ), ) -> u64 , %2: u64, ) , )
+            storage_store(get_storage_path("balances": str, %1: str, ), add(storage_load(get_storage_path("balances": str, %1: str, ), ) -> u64 , %2: u64, ) , )
+            ret()
+    }
+
+    pub fn ERC20.ERC20.mint(%0: u64, )  {
+        4:
+            storage_store(get_storage_path("balances": str, call(@ir.builtin.call_sender() -> str, ) , ), add(storage_load(get_storage_path("balances": str, call(@ir.builtin.call_sender() -> str, ) , ), ) -> u64 , %0: u64, ) , )
+            storage_store(get_storage_path("totalSupply": str, ), add(storage_load(get_storage_path("totalSupply": str, ), ) -> u64 , %0: u64, ) , )
+            ret()
+    }
+
+    pub fn ERC20.ERC20.burn(%0: u64, )  {
+        5:
+            call(@ir.builtin.require(call(@ir.storage.contains_key(get_storage_path("balances": str, call(@ir.builtin.call_sender() -> str, ) , ), ) -> bool, ) , "NO_SUNCH_USER": str, ) -> void, )
+            call(@ir.builtin.require(gt(storage_load(get_storage_path("balances": str, call(@ir.builtin.call_sender() -> str, ) , ), ) -> u64 , %0: u64, ) , "VALUE_NOT_ENOUGH": str, ) -> void, )
+            storage_store(get_storage_path("balances": str, call(@ir.builtin.call_sender() -> str, ) , ), sub(storage_load(get_storage_path("balances": str, call(@ir.builtin.call_sender() -> str, ) , ), ) -> u64 , %0: u64, ) , )
+            storage_store(get_storage_path("totalSupply": str, ), sub(storage_load(get_storage_path("totalSupply": str, ), ) -> u64 , %0: u64, ) , )
+            ret()
+    }
+
+}

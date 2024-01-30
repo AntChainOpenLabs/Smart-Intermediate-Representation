@@ -36,6 +36,8 @@ inkwell = { git = "https://github.com/TheDan64/inkwell", rev = "4f18389938292f6d
 ] }
 smart_ir_macro = { path = "../smart_ir_macro", version = "0.3.0" }
 smart_ir = { path = "../smart_ir" }
+yul_to_ir = { path = "../yul_to_ir" }
+tensor = { path = "../tensor" }
 compiler_base_span = "0.0.1"
 chrono = "0.4.26"
 log = "0.4.14"

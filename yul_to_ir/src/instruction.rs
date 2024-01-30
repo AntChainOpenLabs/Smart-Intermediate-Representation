@@ -15,6 +15,8 @@ use crate::{
     context::{mem_data_ty, Yul2IRContext, SIGNED_WORD_TY, WORD_SIZE, WORD_TY},
 };
 
+
+#[derive(Debug, Clone)]
 pub enum YulInstructionName {
     Stop,
     Add,
@@ -203,7 +205,6 @@ impl Yul2IRContext {
             .iter()
             .map(|arg| self.walk_expr(arg).unwrap())
             .collect();
-
         match instr {
             YulInstructionName::Stop => Ok(self
                 .ir_context
@@ -693,7 +694,6 @@ impl Yul2IRContext {
                         .cloned()?,
                 )
                 .into()),
-            YulInstructionName::SignExtend => todo!(),
             YulInstructionName::Keccak256 => {
                 let input_data = self.declare_data_var(None, Some(WORD_SIZE as u32));
                 self.build_data_store_byte(
@@ -719,7 +719,6 @@ impl Yul2IRContext {
 
                 self.build_data_load_word(bytes.into(), self.hex_literal("0x0"))
             }
-            YulInstructionName::PC => todo!(), //Need Evm Intrinsic
             YulInstructionName::Pop => Ok(self.ir_context.builder.build_nop()), //Do nothing
             YulInstructionName::MLoad => {
                 let data = self
@@ -1150,38 +1149,9 @@ impl Yul2IRContext {
                     vec![t1, t2, t3],
                 )
             }
-            YulInstructionName::Gas => todo!(),
-            YulInstructionName::Address => todo!(),
-            YulInstructionName::Balance => todo!(),
-            YulInstructionName::SelfBalance => todo!(),
-            YulInstructionName::CodeSize => todo!(), //Need Evm Intrinsic
-            YulInstructionName::CodeCopy => todo!(), //Need Evm Intrinsic
-            YulInstructionName::ExtCodeSize => todo!(), //Need Evm Intrinsic
-            YulInstructionName::ExtCodeCopy => todo!(), //Need Evm Intrinsic
-            YulInstructionName::ExtCodeHash => todo!(),
-            YulInstructionName::Create => todo!(),
-            YulInstructionName::Create2 => todo!(),
-            YulInstructionName::Call => todo!(),
-            YulInstructionName::CallCode => todo!(),
-            YulInstructionName::DelegateCall => todo!(),
-            YulInstructionName::StaticCall => todo!(),
-            YulInstructionName::SelfDestruct => todo!(),
-            YulInstructionName::Invalid => todo!(),
-            YulInstructionName::Log0 => todo!(),
-            YulInstructionName::Log1 => todo!(),
-            YulInstructionName::Log2 => todo!(),
-            YulInstructionName::Log4 => todo!(),
-            YulInstructionName::ChainID => todo!(),
-            YulInstructionName::BaseFee => todo!(),
-            YulInstructionName::Origin => todo!(),
-            YulInstructionName::GasPrice => todo!(),
-            YulInstructionName::BlockHash => todo!(),
-            YulInstructionName::CoinBase => todo!(),
-            YulInstructionName::TimeStamp => todo!(),
-            YulInstructionName::Number => todo!(),
-            YulInstructionName::Difficulty => todo!(),
-            YulInstructionName::Prevrandao => todo!(),
-            YulInstructionName::GasLimit => todo!(),
+            instr_name => return Err(ASTLoweringError {
+                message: format!("Internal failed: {:?} not implemented", instr_name)
+            })
         }
     }
 }

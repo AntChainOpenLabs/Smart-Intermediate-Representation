@@ -22,7 +22,7 @@ CommaOne<T>: Vec<T> = {
 };
 
 pub Object: ast::Object = {
-    "object" <name: StringInner> "{" "code" <code: Block> <inner_segments: InnerSegment*> "}" => ast::Object {
+    <doc: FileDoc?><comment: Comment?> "object" <name: StringInner> "{" "code" <code: Block> <inner_segments: InnerSegment*> "}" => ast::Object {
         name: name,
         code: code,
         inner_segments: inner_segments,
@@ -30,20 +30,24 @@ pub Object: ast::Object = {
 }
 
 pub InnerSegment: ast::InnerSegment = {
-    "data" <data: DataLiteral*> => ast::InnerSegment::Data(data),
+    "data \".metadata\"" <data: DataLiteral*> => ast::InnerSegment::Data(data),
     <object: Object> => ast::InnerSegment::Object(Box::new(object)),
 }
 
 pub DataLiteral: ast::DataLiteral = {
-    <data: StringInner> => ast::DataLiteral::StringLiteral(data),
+
     <data: HexDataInner> => ast::DataLiteral::HexLiteral(data),
 }
 
 
 pub Block: ast::Block = {
-    "{" <statements: Statement*> "}" => ast::Block {
-        statements: statements
+    "{" <stmts: CommentStmt*> <last_comment: Comment?>"}" => ast::Block {
+        statements: stmts
     }
+}
+
+pub CommentStmt: ast::Statement = {
+    <comment: Comment*> <statement: Statement> => statement
 }
 
 
@@ -120,7 +124,7 @@ pub If: ast::If = {
 
 
 pub Switch: ast::Switch = {
-    "switch" <condition:Expression> <opt:SwitchOptions> =>
+    "switch" <condition:Expression> <comment: Comment*> <opt:SwitchOptions> =>
         ast::Switch{
             condition,
             opt,
@@ -217,7 +221,7 @@ pub Identifier: ast::Identifier = {
     }
 }
 
-pub Name: String = <s:r"[a-zA-Z][a-zA-Z_0-9.]*"> => String::from(s);
+pub Name: String = <s:r"[a-zA-Z_][a-zA-Z_0-9.$]*"> => String::from(s);
 
 pub DecimalNumberInner: String = <s:r"[0-9]+"> => String::from(s);
 
@@ -232,3 +236,6 @@ pub StringInner: String = <s:r#""((\\("|\\|n|t|(x[0-9A-F][0-9A-F])|(u\{[0-9A-F][
     s.pop();
     frontend::unescape::unescape_str_wrap_error(s.as_str())
 };
+
+pub Comment: String = <s:r"//[^\n]*\n"> => String::from(s);
+pub FileDoc: String = <s:r"/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/"> => String::from(s);

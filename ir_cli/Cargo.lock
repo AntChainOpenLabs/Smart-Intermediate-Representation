@@ -941,7 +941,7 @@ dependencies = [
  "hex",
  "inkwell",
  "keccak-hash",
- "lalrpop",
+ "lalrpop 0.19.12",
  "lalrpop-util 0.19.12",
  "libc",
  "libsecp256k1",
@@ -958,7 +958,9 @@ dependencies = [
  "sha2 0.10.8",
  "smart_ir",
  "smart_ir_macro",
+ "tensor",
  "wasmi",
+ "yul_to_ir",
 ]
 
 [[package]]
@@ -1031,6 +1033,29 @@ dependencies = [
  "petgraph",
  "regex",
  "regex-syntax 0.6.29",
+ "string_cache",
+ "term",
+ "tiny-keccak",
+ "unicode-xid",
+]
+
+[[package]]
+name = "lalrpop"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da4081d44f4611b66c6dd725e6de3169f9f63905421e8626fcb86b6a898998b8"
+dependencies = [
+ "ascii-canvas",
+ "bit-set",
+ "diff",
+ "ena",
+ "is-terminal",
+ "itertools",
+ "lalrpop-util 0.20.0",
+ "petgraph",
+ "pico-args",
+ "regex",
+ "regex-syntax 0.7.5",
  "string_cache",
  "term",
  "tiny-keccak",
@@ -1438,6 +1463,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "pico-args"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5be167a7af36ee22fe3115051bc51f6e6c7054c9348e28deb4f49bd6f705a315"
+
+[[package]]
 name = "pin-project-lite"
 version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1662,6 +1693,12 @@ name = "regex-syntax"
 version = "0.6.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
+
+[[package]]
+name = "regex-syntax"
+version = "0.7.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbb5fb1acd8a1a18b3dd5be62d25485eb770e05afb408a9627d14d451bae12da"
 
 [[package]]
 name = "regex-syntax"
@@ -1991,7 +2028,7 @@ dependencies = [
  "indexmap 1.9.3",
  "inkwell",
  "keccak-hash",
- "lalrpop",
+ "lalrpop 0.19.12",
  "lalrpop-util 0.20.0",
  "libc",
  "libsecp256k1",
@@ -2122,6 +2159,17 @@ dependencies = [
  "redox_syscall",
  "rustix",
  "windows-sys",
+]
+
+[[package]]
+name = "tensor"
+version = "0.1.0"
+dependencies = [
+ "regex",
+ "serde",
+ "serde_json",
+ "smart_ir",
+ "yul_to_ir",
 ]
 
 [[package]]
@@ -2565,6 +2613,18 @@ name = "yansi"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09041cd90cf85f7f8b2df60c646f853b7f535ce68f85244eb6731cf89fa498ec"
+
+[[package]]
+name = "yul_to_ir"
+version = "0.1.0"
+dependencies = [
+ "indexmap 1.9.3",
+ "lalrpop 0.20.0",
+ "lalrpop-util 0.20.0",
+ "num-bigint 0.4.4",
+ "regex",
+ "smart_ir",
+]
 
 [[package]]
 name = "zeroize"

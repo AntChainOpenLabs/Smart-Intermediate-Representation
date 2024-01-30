@@ -32,6 +32,7 @@ target/
 /tmp/
 # Created by default with `src/ci/docker/run.sh`
 /obj/
+**/Cargo.lock
 
 ## Temporary files
 *~
@@ -65,3 +66,11 @@ benches/*.xls
 coverage.xml
 lcov_cobertura.py
 TEST-*.xml
+
+## node
+node_modules
+package-lock.json
+
+#test data
+tensor/src/test_data
+ai_intent/example/output/*
