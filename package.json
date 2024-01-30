@@ -1,21 +1,16 @@
 {
-    "name": "DAppCons",
+    "name": "Smart Intermediate Representation",
     "version": "1.0.0",
-    "description": "DApp Consistency detector",
-    "main": "index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
+    "description": "",
+    "main": "",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/wuzhy1ng/DAppCons.git"
+        "url": "git+https://github.com/AntChainOpenLabs/Smart-Intermediate-Representation.git"
     },
     "author": "",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/wuzhy1ng/DAppCons/issues"
-    },
-    "homepage": "https://github.com/wuzhy1ng/DAppCons#readme",
+    "license": "Apache-2.0 license",
+
+    "homepage": "https://github.com/AntChainOpenLabs/Smart-Intermediate-Representation",
     "dependencies": {
         "solc-typed-ast": "^17.0.0",
         "solcv0.4.1": "npm:solc@0.4.1",
