@@ -19,7 +19,7 @@ use crate::tensor::TensorData;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 /// filed name get from input json, dont edit it
-struct Data {
+pub struct Data {
     SourceCode: String,
     OptimizationUsed: String,
     Runs: String,
@@ -29,7 +29,7 @@ struct Data {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct SourceInfo {
+pub struct SourceInfo {
     contract_address: String,
     contract_name: String,
     solc_version: String,
