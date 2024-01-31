@@ -445,7 +445,7 @@ ir_builtin_json_decode_map(uint32_t runtime_class_offset, cJSON *obj)
         char *key = elem->string;
         if (TABLE_KEY_IS_INT(ret)) {
             struct vector *int_str = vector_new(__strlen(key), 1, key);
-            if (ret->key_runtime_ty <= IR_RUNTIME_TYPE_U256) {
+            if (ret->key_runtime_ty <= IR_RUNTIME_TYPE_U128 || ret->key_runtime_ty == IR_RUNTIME_TYPE_U256) {
                 key = (char *)ir_builtin_str_to_u256(int_str);
             }
             else {
