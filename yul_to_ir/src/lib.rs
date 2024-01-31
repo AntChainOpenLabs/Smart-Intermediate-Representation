@@ -10,8 +10,10 @@ lalrpop_mod!(pub yul); // synthesized by LALRPOP
 pub mod ast;
 pub mod context;
 pub mod instruction;
+
 #[cfg(test)]
-pub mod test;
+pub mod tests;
+
 pub mod transform;
 
 pub fn yul2ir(src: &str, output: Option<&str>) -> Option<Yul2IRContext> {

@@ -17,3 +17,4 @@ smart_ir = { path = "../smart_ir" }
 lalrpop-util = { version = "0.20.0", features = ["lexer", "unicode"] }
 regex = "1.10.2"
 indexmap = "1.0"
+solang-parser = "0.3.3"
