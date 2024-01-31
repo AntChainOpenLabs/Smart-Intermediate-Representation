@@ -22,7 +22,9 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tensor;
 use wasmi::*;
+use yul_to_ir;
 
 fn main() {
     let matches = clap_app!(ir_cli =>
@@ -35,6 +37,12 @@ fn main() {
         (@subcommand build =>
             (@arg INPUT: +required +multiple "Sets the input textual ir file to build")
             (@arg VERBOSE: -v --verbose "Print test information verbosely")
+        )
+        (@subcommand yul2ir =>
+            (@arg INPUT: +required +takes_value "Sets the input textual ir file to build")
+        )
+        (@subcommand sol2tensor =>
+            (@arg INPUT: +required +takes_value "Sets the input textual ir file to build")
         )
     ).get_matches();
 
@@ -170,6 +178,61 @@ fn main() {
                     println!("writen file {ir_abi_json_filepath}");
                 }
             }
+        }
+    } else if let Some(matches) = matches.subcommand_matches("yul2ir") {
+        if let Some(input) = matches.value_of("INPUT") {
+            let path = std::path::Path::new(&input);
+            if path.is_file() {
+                let mut new_file_path = String::from(input);
+                new_file_path.truncate(new_file_path.len() - "yul".len());
+                new_file_path.push_str("ir");
+                let src = match std::fs::read_to_string(&path) {
+                    Ok(src) => src,
+                    Err(_) => {
+                        println!(
+                            "{}",
+                            format!(
+                                "Failed to load source file, can't find {}",
+                                path.to_str().unwrap()
+                            )
+                        );
+                        panic!();
+                    }
+                };
+                yul_to_ir::yul2ir(&src, Some(&new_file_path));
+            } else if path.is_dir() {
+                let entries = fs::read_dir(input).expect("");
+                for entry in entries {
+                    if let Ok(entry) = entry {
+                        let file_path = entry.path();
+                        if let Some(extension) = file_path.extension() {
+                            if extension == "yul" {
+                                let mut new_file_path = file_path.to_str().unwrap().to_string();
+                                new_file_path.truncate(new_file_path.len() - "yul".len());
+                                new_file_path.push_str("ir");
+                                let src = match std::fs::read_to_string(&file_path) {
+                                    Ok(src) => src,
+                                    Err(_) => {
+                                        println!(
+                                            "{}",
+                                            format!(
+                                                "Failed to load source file, can't find {}",
+                                                file_path.to_str().unwrap()
+                                            )
+                                        );
+                                        panic!();
+                                    }
+                                };
+                                yul_to_ir::yul2ir(&src, Some(&new_file_path));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else if let Some(matches) = matches.subcommand_matches("sol2tensor") {
+        if let Some(input) = matches.value_of("INPUT") {
+            tensor::sol2tensor::sol_to_tensor(input, true);
         }
     } else {
         println!("{}", matches.usage());

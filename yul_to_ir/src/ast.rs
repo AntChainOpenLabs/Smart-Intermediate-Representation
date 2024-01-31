@@ -46,6 +46,7 @@ pub enum Statement {
     FunctionDefinition(Box<FunctionDefinition>),
     FunctionCall(Box<FunctionCall>),
     IfElse(Box<IfElse>),
+    Comment
 }
 
 #[derive(Debug, Clone)]

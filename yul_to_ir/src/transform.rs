@@ -50,13 +50,14 @@ impl Yul2IRContext {
                 self.walk_function_definition(func_def)
             }
             crate::ast::Statement::FunctionCall(func_call) => {
-                let val = self.walk_function_call(func_call).unwrap();
+                let val = self.walk_function_call(func_call)?;
                 if let smart_ir::ir::cfg::Expr::Instr(instr) = val {
                     self.ir_context.builder.insert_instr(*instr);
                 }
                 self.ok_result()
             }
             Statement::IfElse(ifelse) => self.walk_ifelse(ifelse),
+            Statement::Comment => self.ok_result(),
         }
     }
 
@@ -98,7 +99,7 @@ impl Yul2IRContext {
     }
 
     fn walk_switch(&self, switch: &crate::ast::Switch) -> CompileResult {
-        let if_stmt = switch2ifelse(switch);
+        let if_stmt = switch2ifelse(switch)?;
         self.walk_ifelse(&if_stmt)
     }
 
@@ -215,13 +216,17 @@ impl Yul2IRContext {
     ) -> CompileResult {
         let mut ret_tys = vec![];
         if let Some(value) = &var_decl.value {
-            ret_tys = match value  {
+            ret_tys = match value {
                 Expression::FunctionCall(func) => {
                     let func_name = self.current_func_decls.borrow();
                     let func_decl = func_name.get(&func.id.name).clone();
-                    func_decl.unwrap().returns.clone().into_iter().map(
-                        | x | self.parse_ty_name(&x.type_name)
-                    ).collect::<Vec<Type>>()
+                    func_decl
+                        .unwrap()
+                        .returns
+                        .clone()
+                        .into_iter()
+                        .map(|x| self.parse_ty_name(&x.type_name))
+                        .collect::<Vec<Type>>()
                 }
                 _ => {
                     vec![]
@@ -291,7 +296,10 @@ impl Yul2IRContext {
     fn walk_function_call(&self, func_call: &crate::ast::FunctionCall) -> CompileResult {
         let func_name = func_call.id.name.clone();
         if let Some(instr) = parse_intrinsic_func_name(&func_name) {
-            return self.walk_yul_instruction(instr, func_call.arguments.as_slice());
+            match self.walk_yul_instruction(instr, func_call.arguments.as_slice()){
+                Ok(expr) => return Ok(expr),
+                Err(_) => {},
+            }
         }
         let module_name = self.current_module_name.borrow().clone();
         let contract_name = self.current_contract_name.borrow().clone();
@@ -299,34 +307,44 @@ impl Yul2IRContext {
         let mut ret_ty = WORD_TY;
         if let Some(func_ret_ty) = current_func_decls.get(&func_name) {
             if func_ret_ty.returns.len() > 1 {
-                ret_ty = Type::tuple(func_ret_ty.returns.clone().into_iter().map(
-                    | x | self.parse_ty_name(&x.type_name)
-                ).collect::<Vec<Type>>());
+                ret_ty = Type::tuple(
+                    func_ret_ty
+                        .returns
+                        .clone()
+                        .into_iter()
+                        .map(|x| self.parse_ty_name(&x.type_name))
+                        .collect::<Vec<Type>>(),
+                );
             }
         }
-        let mut args = func_call
-            .arguments
-            .iter()
-            .map(|arg| self.walk_expr(arg).unwrap())
-            .collect();
+        let mut call_args = vec![];
+        for arg in &func_call.arguments {
+            match self.walk_expr(&arg) {
+                Ok(expr) => call_args.push(expr),
+                e => return e,
+            }
+        }
         let qualifier_func_name = format!("{}.{}.{}", module_name, contract_name, func_name,);
         Ok(self
             .ir_context
             .builder
-            .instr_call(qualifier_func_name.into(), args, ret_ty)
+            .instr_call(qualifier_func_name.into(), call_args, ret_ty)
             .into())
     }
 
     fn walk_leave(&self) -> CompileResult {
-        todo!()
+        // todo!()
+        self.ok_result()
     }
 
     fn walk_break(&self) -> CompileResult {
-        todo!()
+        // todo!()
+        self.ok_result()
     }
 
     fn walk_continue(&self) -> CompileResult {
-        todo!()
+        // todo!()
+        self.ok_result()
     }
 
     fn walk_identifier(&self, id: &crate::ast::Identifier) -> CompileResult {
@@ -353,7 +371,7 @@ impl Yul2IRContext {
     }
 }
 
-fn switch2ifelse(switch: &Switch) -> IfElse {
+fn switch2ifelse(switch: &Switch) -> Result<IfElse, ASTLoweringError> {
     let mut if_else_stmt = IfElse {
         cond: Expression::Literal(ast::Literal::TrueLiteral(None)),
         body: Block { statements: vec![] },
@@ -376,19 +394,24 @@ fn switch2ifelse(switch: &Switch) -> IfElse {
                     },
                     arguments: vec![switch_cond.clone(), Expression::Literal(case.case.clone())],
                 }));
-                let new_if = IfElse {
-                    cond,
-                    body: case.body.clone(),
-                    else_body: Block {
-                        statements: vec![Statement::IfElse(Box::new(if_else_stmt.clone()))],
-                    },
-                };
+                let new_if =
+                    IfElse {
+                        cond,
+                        body: case.body.clone(),
+                        else_body: Block {
+                            statements: vec![Statement::IfElse(Box::new(if_else_stmt.clone()))],
+                        },
+                    };
                 if_else_stmt = new_if;
             }
         }
-        ast::SwitchOptions::Default(_) => todo!(),
+        ast::SwitchOptions::Default(_) => {
+            return Err(ASTLoweringError {
+                message: "not support3".to_string(),
+            })
+        }
     }
-    if_else_stmt
+    Ok(if_else_stmt)
 }
 
 impl Yul2IRContext {
@@ -434,15 +457,15 @@ impl Yul2IRContext {
 
     pub fn hex_literal(&self, v: &str) -> Expr {
         let without_prefix = v.trim_start_matches("0x");
-        Expr::Literal(Literal::Int(cfg::IntLiteral::U256(
-            BigInt::parse_bytes(without_prefix.as_bytes(), 16).unwrap(),
-        )))
+        Expr::Literal(Literal::Int(
+            cfg::IntLiteral::U256(BigInt::parse_bytes(without_prefix.as_bytes(), 16).unwrap())
+        ))
     }
 
     pub fn dec_literal(&self, v: &str) -> Expr {
-        Expr::Literal(Literal::Int(cfg::IntLiteral::U256(
-            BigInt::parse_bytes(v.as_bytes(), 10).unwrap(),
-        )))
+        Expr::Literal(
+            Literal::Int(cfg::IntLiteral::U256(BigInt::parse_bytes(v.as_bytes(), 10).unwrap()))
+        )
     }
 
     pub fn get_id_type(&self, id: IdentifierId) -> Type {
@@ -533,6 +556,7 @@ impl Yul2IRContext {
                     func_def.name.name.clone()
                 );
                 let func_def = self.transform_func(func_def, qualifier_func_name)?;
+
                 c.functions.insert(func_def.name.clone(), func_def);
             }
         }
@@ -930,9 +954,7 @@ impl Yul2IRContext {
             get_intrinsic_func_by_key(IntrinsicFuncName::IR_VECTOR_PUSH)
                 .unwrap()
                 .into(),
-            vec![cfg::Expr::Literal(cfg::Literal::Int(cfg::IntLiteral::U8(
-                0,
-            )))],
+            vec![cfg::Expr::Literal(cfg::Literal::Int(cfg::IntLiteral::U8(0)))],
             cfg::Type::void(),
         );
 
@@ -1002,16 +1024,17 @@ impl Yul2IRContext {
 
         self.ir_context.builder.position_at_end(&then_block);
 
-        let byte_value = self.build_data_load_byte(
-            src.clone(),
-            self.ir_context
-                .builder
-                .instr_add(
-                    src_pos.clone(),
-                    self.ir_context.builder.build_identifier(&offset),
-                )
-                .into(),
-        )?;
+        let byte_value =
+            self.build_data_load_byte(
+                src.clone(),
+                self.ir_context
+                    .builder
+                    .instr_add(
+                        src_pos.clone(),
+                        self.ir_context.builder.build_identifier(&offset),
+                    )
+                    .into(),
+            )?;
 
         self.build_data_store_byte(
             dst.clone(),
