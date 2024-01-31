@@ -72,5 +72,5 @@ node_modules
 package-lock.json
 
 #test data
-tensor/src/test_data
+tensor/src/test_data/output
 ai_intent/example/output/*

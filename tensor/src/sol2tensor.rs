@@ -92,7 +92,7 @@ impl DataMap {
 
         for (_, yuls) in &self.yul {
             for (fqn_name, yul_src) in yuls {
-                let file_name = format!("{}/{}.yul", yul_dir, fqn_name);
+                let file_name = format!("{}/{}.yul", yul_dir, fqn_name.replace('/', ":"));
                 let file_path = Path::new(&file_name);
                 if let Some(parent) = file_path.parent() {
                     fs::create_dir_all(parent).unwrap();
@@ -104,7 +104,7 @@ impl DataMap {
 
         for (_, ctxs) in &self.sir {
             for (fqn_name, ctx) in ctxs {
-                let file_name = format!("{}/{}.yul", sir_dir, fqn_name);
+                let file_name = format!("{}/{}.yul", sir_dir, fqn_name.replace('/', ":"));
                 let file_path = Path::new(&file_name);
                 if let Some(parent) = file_path.parent() {
                     fs::create_dir_all(parent).unwrap();
@@ -119,7 +119,7 @@ impl DataMap {
 
         for (_, datas) in &self.tensor {
             for (fqn_name, data) in datas {
-                let file_name = format!("{}/{}.json", tensor_dir, fqn_name);
+                let file_name = format!("{}/{}.json", tensor_dir, fqn_name.replace('/', ":"));
                 let file_path = Path::new(&file_name);
                 if let Some(parent) = file_path.parent() {
                     fs::create_dir_all(parent).unwrap();
@@ -355,12 +355,7 @@ fn _get_yul(address: &str, address_val: &Value) -> HashMap<String, YulSrc> {
                 Some(ir) => {
                     if let Some(ir) = ir.as_str() {
                         if ir.len() > 0 {
-                            let key = format!(
-                                "{}:{}:{}",
-                                address,
-                                file_name.split('/').last().unwrap(),
-                                contract_name
-                            );
+                            let key = format!("{}::{}::{}", address, file_name, contract_name);
                             irs.insert(key, ir.to_string());
                         }
                     }
@@ -399,16 +394,50 @@ fn _yul2tensor(
     (ctxs, tensors)
 }
 
-fn get_contract_user_doc(standard_output_json_val: &Value, contract_name: String) -> Value {
-    standard_output_json_val["contracts"]["this_is_a_tmp_filename.sol"][contract_name]["userdoc"]
-        ["methods"]
-        .clone()
-}
+fn parse_doc(m: &mut DataMap) {
+    for (address, val) in &m.standard_output {
+        let contracts = val["contracts"].as_object().unwrap();
+        for (file_name, file_val) in contracts {
+            for (contract_name, contract_val) in file_val.as_object().unwrap() {
+                let dev_doc = contract_val["devdoc"]["methods"].as_object().unwrap();
+                let user_doc = contract_val["userdoc"]["methods"].as_object().unwrap();
+                for (func_name, v) in dev_doc {
+                    let func_dev_doc = v.as_object().unwrap()["details"].as_str().unwrap();
+                    if func_dev_doc.len() > 0{
+                        let fqn_name = format!("{}::{}::{}", address, file_name, contract_name);
+                        if let Some(tensor_data) = m.tensor.get_mut(address).unwrap().get_mut(&fqn_name)
+                        {
+                            for data in tensor_data.iter_mut() {
+                                let func_name: Vec<&str> = func_name.split('(').collect();
+                                let func_name = func_name.first().unwrap();
+                                if data.func_name.contains(func_name) {
+                                    data.doc = func_dev_doc.to_string();
+                                }
+                            }
+                        }
+                    }
 
-fn get_contract_dev_doc(standard_output_json_val: &Value, contract_name: String) -> Value {
-    standard_output_json_val["contracts"]["this_is_a_tmp_filename.sol"][contract_name]["devdoc"]
-        ["methods"]
-        .clone()
+                }
+
+                for (func_name, v) in user_doc {
+                    let func_user_doc = v.as_object().unwrap()["details"].as_str().unwrap();
+                    if func_user_doc.len() > 0{
+                        let fqn_name = format!("{}::{}::{}", address, file_name, contract_name);
+                        if let Some(tensor_data) = m.tensor.get_mut(address).unwrap().get_mut(&fqn_name)
+                        {
+                            for data in tensor_data.iter_mut() {
+                                let func_name: Vec<&str> = func_name.split('(').collect();
+                                let func_name = func_name.first().unwrap();
+                                if data.func_name.contains(func_name) {
+                                    data.doc = func_user_doc.to_string();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 pub fn sol_to_tensor(input_path: &str, dump_to_file: bool) -> DataMap {
@@ -421,6 +450,7 @@ pub fn sol_to_tensor(input_path: &str, dump_to_file: bool) -> DataMap {
     get_yul(&mut data_map);
     println!("{:?}", "yul to ir");
     yul2tenosr(&mut data_map);
+    parse_doc(&mut data_map);
 
     if dump_to_file {
         let path = path.parent().unwrap_or(&path).to_path_buf();
@@ -436,7 +466,7 @@ pub fn sol_to_tensor(input_path: &str, dump_to_file: bool) -> DataMap {
         yul_dir.push("output/yul");
         sir_dir.push("output/sir");
         tensor_dir.push("output/tensor");
-        println!("{:?}", "dump");
+        println!("{:?}", "dump to file");
         data_map.dump_to_file(
             source_info_dir.to_str().unwrap(),
             standard_input_dir.to_str().unwrap(),
