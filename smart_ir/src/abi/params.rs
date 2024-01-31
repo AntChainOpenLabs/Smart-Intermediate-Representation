@@ -31,8 +31,6 @@ pub enum ABIParam {
     I64(i64),
     U128(u128),
     I128(i128),
-    U256(BigInt),
-    I256(BigInt),
     Bool(bool),
     Str(String),
     Parampack(Vec<u8>),
@@ -48,8 +46,6 @@ pub enum ABIParam {
     I64Array(Vec<i64>),
     U128Array(Vec<u128>),
     I128Array(Vec<i128>),
-    U256Array(Vec<BigInt>),
-    I256Array(Vec<BigInt>),
     BoolArray(Vec<bool>),
     StrArray(Vec<String>),
 
@@ -64,10 +60,16 @@ pub enum ABIParam {
     StrI64Map(HashMap<String, i64>),
     StrU128Map(HashMap<String, u128>),
     StrI128Map(HashMap<String, i128>),
-    StrU256Map(HashMap<String, BigInt>),
-    StrI256Map(HashMap<String, BigInt>),
     StrBoolMap(HashMap<String, bool>),
     StrStrMap(HashMap<String, String>),
+
+    // 256-bit number
+    U256(BigInt),
+    I256(BigInt),
+    U256Array(Vec<BigInt>),
+    I256Array(Vec<BigInt>),
+    StrU256Map(HashMap<String, BigInt>),
+    StrI256Map(HashMap<String, BigInt>),
 }
 
 macro_rules! encode_vec {

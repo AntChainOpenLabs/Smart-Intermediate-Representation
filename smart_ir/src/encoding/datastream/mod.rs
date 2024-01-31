@@ -22,11 +22,9 @@ pub enum ParamType {
     I64 = 7,
     U128 = 8,
     I128 = 9,
-    U256 = 10,
-    I256 = 11,
-    Bool = 12,
-    Str = 13,
-    Parampack = 14,
+    Bool = 10,
+    Str = 11,
+    Parampack = 12,
 
     // Array params
     U8Array = 32,
@@ -39,10 +37,8 @@ pub enum ParamType {
     I64Array = 39,
     U128Array = 40,
     I128Array = 41,
-    U256Array = 42,
-    I256Array = 43,
-    BoolArray = 44,
-    StrArray = 45,
+    BoolArray = 42,
+    StrArray = 43,
 
     // Map params
     StrU8Map = 64,
@@ -55,10 +51,16 @@ pub enum ParamType {
     StrI64Map = 71,
     StrU128Map = 72,
     StrI128Map = 73,
-    StrU256Map = 74,
-    StrI256Map = 75,
-    StrBoolMap = 76,
-    StrStrMap = 77,
+    StrBoolMap = 74,
+    StrStrMap = 75,
+
+    // 256-bit number
+    U256 = 80,
+    I256 = 81,
+    U256Array = 82,
+    I256Array = 83,
+    StrU256Map = 84,
+    StrI256Map = 85,
 }
 
 impl ParamType {

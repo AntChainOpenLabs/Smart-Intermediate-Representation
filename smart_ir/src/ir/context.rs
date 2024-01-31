@@ -29,19 +29,21 @@ pub const IR_RUNTIME_U16_TYPE: u8 = 1;
 pub const IR_RUNTIME_U32_TYPE: u8 = 2;
 pub const IR_RUNTIME_U64_TYPE: u8 = 3;
 pub const IR_RUNTIME_U128_TYPE: u8 = 4;
-pub const IR_RUNTIME_U256_TYPE: u8 = 5;
-pub const IR_RUNTIME_I8_TYPE: u8 = 6;
-pub const IR_RUNTIME_I16_TYPE: u8 = 7;
-pub const IR_RUNTIME_I32_TYPE: u8 = 8;
-pub const IR_RUNTIME_I64_TYPE: u8 = 9;
-pub const IR_RUNTIME_I128_TYPE: u8 = 10;
-pub const IR_RUNTIME_I256_TYPE: u8 = 11;
-pub const IR_RUNTIME_BOOL_TYPE: u8 = 12;
-pub const IR_RUNTIME_STR_TYPE: u8 = 13;
-pub const IR_RUNTIME_ASSET_TYPE: u8 = 14;
-pub const IR_RUNTIME_STRUCT_TYPE: u8 = 15;
-pub const IR_RUNTIME_ARRAY_TYPE: u8 = 16;
-pub const IR_RUNTIME_MAP_TYPE: u8 = 17;
+pub const IR_RUNTIME_I8_TYPE: u8 = 5;
+pub const IR_RUNTIME_I16_TYPE: u8 = 6;
+pub const IR_RUNTIME_I32_TYPE: u8 = 7;
+pub const IR_RUNTIME_I64_TYPE: u8 = 8;
+pub const IR_RUNTIME_I128_TYPE: u8 = 9;
+
+pub const IR_RUNTIME_BOOL_TYPE: u8 = 10;
+pub const IR_RUNTIME_STR_TYPE: u8 = 11;
+pub const IR_RUNTIME_ASSET_TYPE: u8 = 12;
+pub const IR_RUNTIME_STRUCT_TYPE: u8 = 13;
+pub const IR_RUNTIME_ARRAY_TYPE: u8 = 14;
+pub const IR_RUNTIME_MAP_TYPE: u8 = 15;
+pub const IR_RUNTIME_U256_TYPE: u8 = 16;
+pub const IR_RUNTIME_I256_TYPE: u8 = 17;
+
 
 /// AntChain IR IRContext
 #[derive(Debug, Default, Clone)]
