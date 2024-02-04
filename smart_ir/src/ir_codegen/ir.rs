@@ -23,7 +23,6 @@ use super::{
     builtin_constants::{MEMCMP_FUNC, Q_MAP_NEW_FUNC_NAME, VECTOR_NEW_FUNC_NAME},
     context::{CodeGenError, CompileResult, IR2LLVMCodeGenContext},
     error::FUNCTION_RETURN_VALUE_NOT_FOUND_MSG,
-    traits::BaseTypeMethods,
 };
 
 impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
@@ -95,10 +94,26 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                 self.ok_result()
             }
             InstrDescription::Match {
-                val: _,
-                otherwise: _,
-                jump_table: _,
-            } => unimplemented!(),
+                val,
+                otherwise,
+                jump_table,
+            } => {
+                let bb_map = self.bb_map.borrow();
+                let cond = self.walk_ir_expr(val)?;
+                let otherwise_bb = *bb_map.get(otherwise).unwrap();
+                let mut cases = vec![];
+                for (val, bb_id) in jump_table {
+                    cases.push((
+                        self.i32_value(*val as u64).into_int_value(),
+                        *bb_map.get(bb_id).unwrap(),
+                    ));
+                }
+
+                let _ = self.builder
+                    .build_switch(cond.into_int_value(), otherwise_bb, &cases);
+
+                self.ok_result()
+            }
             InstrDescription::Not { op } => {
                 let op = self.walk_ir_expr(op)?;
                 let res = self.builder.build_not(op.into_int_value(), "").unwrap();

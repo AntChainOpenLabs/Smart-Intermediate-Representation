@@ -2,8 +2,6 @@
 // Copyright (c) The Smart Intermediate Representation Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-use std::fs::File;
-use std::io::Read;
 
 use crate::context::Yul2IRContext;
 use crate::yul;
@@ -34,6 +32,82 @@ fn yul_parser_tuple_test() {
     p.print_modules(&mut w).unwrap();
     println!("{}", w);
 }
+
+#[test]
+fn switch_stmt_test1() {
+    let expr = yul::ObjectParser::new().parse(
+        r#"
+        object "Token" {
+            code {
+                switch selector()
+                case 0x70a08231 {
+                    returnUint(balanceOf(decodeAsAddress(0)))
+                }
+                case 0x18160ddd {
+                    returnUint(totalSupply())
+                }
+                default {
+                    revert(0, 0)
+                }
+            }
+        }
+        "#,
+    ).unwrap();
+    let mut context = Yul2IRContext::new_with_object(expr);
+    context.transform().unwrap();
+    let mut p = IRPrinter::new(&context.ir_context);
+    let mut w = String::new();
+    p.print_modules(&mut w).unwrap();
+    println!("{}", w);
+}
+
+#[test]
+fn switch_stmt_test2() {
+    let expr = yul::ObjectParser::new().parse(
+        r#"
+        object "Token" {
+            code {
+                switch selector()
+                case 0x70a08231 {
+                    returnUint(balanceOf(decodeAsAddress(0)))
+                }
+                case 0x18160ddd {
+                    returnUint(totalSupply())
+                }
+            }
+        }
+        "#,
+    ).unwrap();
+    let mut context = Yul2IRContext::new_with_object(expr);
+    context.transform().unwrap();
+    let mut p = IRPrinter::new(&context.ir_context);
+    let mut w = String::new();
+    p.print_modules(&mut w).unwrap();
+    println!("{}", w);
+}
+
+#[test]
+fn switch_stmt_test3() {
+    let expr = yul::ObjectParser::new().parse(
+        r#"
+        object "Token" {
+            code {
+                switch selector()
+                default {
+                    revert(0, 0)
+                }
+            }
+        }
+        "#,
+    ).unwrap();
+    let mut context = Yul2IRContext::new_with_object(expr);
+    context.transform().unwrap();
+    let mut p = IRPrinter::new(&context.ir_context);
+    let mut w = String::new();
+    p.print_modules(&mut w).unwrap();
+    println!("{}", w);
+}
+
 
 #[test]
 fn yul_parser_erc20_test() {

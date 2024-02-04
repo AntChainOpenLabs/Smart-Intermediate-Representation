@@ -99,8 +99,69 @@ impl Yul2IRContext {
     }
 
     fn walk_switch(&self, switch: &crate::ast::Switch) -> CompileResult {
-        let if_stmt = switch2ifelse(switch)?;
-        self.walk_ifelse(&if_stmt)
+        let cond_value = self.walk_expr(&switch.condition)?;
+        let end_block = self.ir_context.append_block("switch_end");
+        match &switch.opt {
+            ast::SwitchOptions::Cases(cases, default) => {
+                let mut jump_tbl: IndexMap<u32, (cfg::BasicBlock, Block)> = IndexMap::default();
+                for case in cases {
+                    match &case.case {
+                        ast::Literal::HexNumberLiteral(hex, _) => {
+                            let hex_value = match u32::from_str_radix(&hex.hex[2..], 16) {
+                                Ok(v) => v,
+                                Err(_) => {
+                                    return Err(ASTLoweringError {
+                                        message: "not support switch case value".to_string(),
+                                    })
+                                }
+                            };
+
+                            let case_block = self.ir_context.append_block("switch_else");
+                            jump_tbl.insert(hex_value, (case_block, case.body.clone()));
+                        }
+                        _ => {
+                            return Err(ASTLoweringError {
+                                message: "not support type in switch case".to_string(),
+                            })
+                        }
+                    }
+                }
+
+                let otherwise_block = self.ir_context.append_block("switch_otherwise");
+                self.ir_context.builder.build_match(
+                    cond_value,
+                    otherwise_block.id,
+                    jump_tbl.iter().map(|(v, bb)| (*v, bb.0.id)).collect(),
+                );
+
+                for (_, bb) in jump_tbl {
+                    self.ir_context.builder.position_at_end(&bb.0);
+                    self.walk_block(&bb.1);
+                    self.ir_context.builder.build_br(&end_block);
+                }
+
+                self.ir_context.builder.position_at_end(&otherwise_block);
+                if let Some(default) = default {
+                    self.walk_block(&default.body);
+                }
+                self.ir_context.builder.build_br(&end_block);
+
+                self.ir_context.builder.position_at_end(&end_block);
+            }
+            ast::SwitchOptions::Default(default) => {
+                let mut jump_tbl: IndexMap<u32, u32> = IndexMap::default();
+                let otherwise_block = self.ir_context.append_block("switch_otherwise");
+                self.ir_context
+                    .builder
+                    .build_match(cond_value, otherwise_block.id, jump_tbl);
+                self.ir_context.builder.position_at_end(&otherwise_block);
+                self.walk_block(&default.body);
+                self.ir_context.builder.build_br(&end_block);
+
+                self.ir_context.builder.position_at_end(&end_block);
+            }
+        }
+        self.ok_result()
     }
 
     fn walk_for(&self, r#for: &crate::ast::For) -> CompileResult {
@@ -296,9 +357,9 @@ impl Yul2IRContext {
     fn walk_function_call(&self, func_call: &crate::ast::FunctionCall) -> CompileResult {
         let func_name = func_call.id.name.clone();
         if let Some(instr) = parse_intrinsic_func_name(&func_name) {
-            match self.walk_yul_instruction(instr, func_call.arguments.as_slice()){
+            match self.walk_yul_instruction(instr, func_call.arguments.as_slice()) {
                 Ok(expr) => return Ok(expr),
-                Err(_) => {},
+                Err(_) => {}
             }
         }
         let module_name = self.current_module_name.borrow().clone();
