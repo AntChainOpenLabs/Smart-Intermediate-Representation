@@ -46,5 +46,5 @@ fn test_match() {
 
     let mut bytes = vec![0_u8];
     bytes.append(&mut ABIParam::I32(3).as_bytes());
-    assert_eq!(runtime.call("match", &bytes), [0,3]);
+    assert_eq!(runtime.call("match", &bytes), [0, 3]);
 }
