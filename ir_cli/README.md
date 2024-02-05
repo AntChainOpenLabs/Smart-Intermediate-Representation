@@ -35,3 +35,36 @@ Run the function `greeting2` of example `ir_example/hello_world.ir`, you will ge
 CALL PRINTLN: Hello Smart Intermediate Representation
 result: test
 ```
+
+## AI Intent
+
+In order to use the capabilities of AI Intent, some preparations are required.
+
+First, you need to install `solcjs` dependencies. We need to use `solcjs` to compile the solidity contract. Need to be executed in the root directory of this project
+
+```shell
+npm install
+```
+
+Second, need to build ir_cli according to the above steps and add the `ir_cli` to PATH.
+
+Finally, execute the subcommand of ir_cli to generate tensor data of AI Intent.
+
+```shell
+ir_cli sol2tensor $input_dir_absolute_path
+```
+
+```
+├- input
+| ├- file1.json
+| ├- file2.json
+| └- ...
+└- output
+  ├- source_info -- infomation about contract
+  ├- standard_input -- solc compiler standard input json
+  ├- standard_output -- solc compiler standard output json
+  ├- yul -- yul src code
+  ├- sir -- Smart IR
+  └- tensor -- tensor data
+
+```
