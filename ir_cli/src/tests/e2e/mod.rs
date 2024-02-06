@@ -25,6 +25,7 @@ mod r#for;
 mod func;
 mod r#if;
 mod map;
+mod r#match;
 mod math;
 mod parampack;
 mod select;
