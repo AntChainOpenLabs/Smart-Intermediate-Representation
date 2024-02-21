@@ -66,6 +66,11 @@ __strlen(const char *s);
 extern bool
 __memcmp(uint8_t *left, uint32_t left_len, uint8_t *right, uint32_t right_len);
 
+//bigint div
+uint256_t div256_u256_rem(uint256_t dividend, uint256_t divisor, uint256_t *remainder);
+
+uint256_t div256_u256(uint256_t dividend, uint256_t divisor);
+
 #ifndef CC_LIB_TEST_MOCK
 void *
 __malloc(size_t size);
@@ -93,11 +98,6 @@ int256_t
 __strtoi256(const char *__restrict nptr, char **__restrict endptr, int base);
 uint256_t
 __strtou256(const char *__restrict nptr, char **__restrict endptr, int base);
-
-//bigint div
-uint256_t div256_u256_rem(uint256_t dividend, uint256_t divisor, uint256_t *remainder);
-
-uint256_t div256_u256(uint256_t dividend, uint256_t divisor);
 
 #define malloc __malloc
 

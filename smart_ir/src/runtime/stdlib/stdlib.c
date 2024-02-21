@@ -58,9 +58,9 @@ extern int32_t get_call_result_length(void);
 // get_call_result hostapi
 extern void get_call_result(char *result);
 
-uint256_t div256_u256_rem(uint256_t dividend, uint256_t divisor, uint256_t *remainder);
+extern uint256_t div256_u256_rem(uint256_t dividend, uint256_t divisor, uint256_t *remainder);
 
-uint256_t div256_u256(uint256_t dividend, uint256_t divisor);
+extern uint256_t div256_u256(uint256_t dividend, uint256_t divisor);
 
 void
 runtime_abort(char *msg, uint32_t msg_length,
