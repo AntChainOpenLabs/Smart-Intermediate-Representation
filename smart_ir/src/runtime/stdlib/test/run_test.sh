@@ -2,7 +2,7 @@
 set -e
 echo "building ir c lib unit tests"
 # need clang12. clang14 not supported i256/u256
-cmake -S . -B build -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_BUILD_TYPE=Debug
+cmake -S . -B build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -j8
 PWD=`pwd`
 cd build
