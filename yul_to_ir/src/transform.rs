@@ -194,6 +194,7 @@ impl Yul2IRContext {
         let cond_value = self.walk_expr(&r#if.cond)?;
         let then_block = self.ir_context.append_block("if_body");
         let end_block = self.ir_context.append_block("if_exit");
+        let mut unreachableflag = false;
         self.ir_context
             .builder
             .build_cond_br(cond_value, &then_block, &end_block);
@@ -201,8 +202,11 @@ impl Yul2IRContext {
         self.ir_context.builder.position_at_end(&then_block);
         for stmt in &r#if.body.statements {
             self.walk_stmt(stmt)?;
+            unreachableflag = self.is_unreachable_node(stmt);
         }
-        self.ir_context.builder.build_br(&end_block);
+        if !unreachableflag {
+            self.ir_context.builder.build_br(&end_block);
+        }
 
         self.ir_context.builder.position_at_end(&end_block);
         self.ok_result()
@@ -393,18 +397,32 @@ impl Yul2IRContext {
             .into())
     }
 
+    // The leave statement can be used to exit the current function.
+    // It works like the return statement in other languages just that it does not take a value to return,
+    // it just exits the functions and the function will return whatever values are currently assigned to the return variable(s).
+    //
+    // The leave statement can only be used inside a function.
     fn walk_leave(&self) -> CompileResult {
-        // todo!()
         self.ok_result()
     }
 
+    //  A continue or break statement can only be used inside the body of a for-loop, as follows.
     fn walk_break(&self) -> CompileResult {
-        // todo!()
+        let labels = &self.ir_context.builder.context.labels.borrow();
+        let cur_label = labels.last().unwrap();
+        self.ir_context
+            .builder
+            .build_br(&cur_label.break_target_label.borrow());
+
         self.ok_result()
     }
 
     fn walk_continue(&self) -> CompileResult {
-        // todo!()
+        let labels = &self.ir_context.builder.context.labels.borrow();
+        let cur_label = labels.last().unwrap();
+        self.ir_context
+            .builder
+            .build_br(&cur_label.continue_target_label.borrow());
         self.ok_result()
     }
 
@@ -1182,5 +1200,12 @@ impl Yul2IRContext {
                 cfg::Type::void(),
             )
             .into())
+    }
+
+    pub(crate) fn is_unreachable_node(&self, stmt: &Statement) -> bool {
+        matches!(
+            stmt,
+            Statement::Break | Statement::Continue | Statement::Leave
+        )
     }
 }

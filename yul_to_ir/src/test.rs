@@ -2,7 +2,6 @@
 // Copyright (c) The Smart Intermediate Representation Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-
 use crate::context::Yul2IRContext;
 use crate::yul;
 use smart_ir::ir::printer::IRPrinter;
@@ -107,7 +106,6 @@ fn switch_stmt_test3() {
     p.print_modules(&mut w).unwrap();
     println!("{}", w);
 }
-
 
 #[test]
 fn yul_parser_erc20_test() {
@@ -844,4 +842,110 @@ object "Drop721_939" {
     println!("{}", w);
 }
 
+#[test]
+fn break_stmt_test() {
+    let expr = yul::ObjectParser::new()
+        .parse(
+            r#"
+        object "Token" {
+            code {
+                let x := 0
+                for { let i := 0 } lt(i, 0x100) { i := add(i, 0x1) } {
+                    x := add(x, i)
+                    if gt(x, 0x100) { break }
+                }
+            }
+        }
+        "#,
+        )
+        .unwrap();
+    let mut context = Yul2IRContext::new_with_object(expr);
+    context.transform().unwrap();
+    let mut p = IRPrinter::new(&context.ir_context);
+    let mut w = String::new();
+    p.print_modules(&mut w).unwrap();
+    let expected = r#"module_name = "Token"
+contract Token {
+    state {
+    }
+    pub fn Token.Token.init()  {
+        0:
+            let %0: [u8] 
+            let %1: [u8] 
+            let %2: [u8] 
+            let %3: u256 = 0: u256
+            let %4: u256 = 0: u256
+            br(bb 1, ) 
+        1:
+            br_if(lt(%4: u256, 256: u256, ) , bb 2, bb 3, ) 
+        2:
+            %3 = add(%3: u256, %4: u256, ) 
+            br_if(gt(%3: u256, 256: u256, ) , bb 4, bb 5, ) 
+        3:
+            ret() 
+        4:
+            br(bb 3, ) 
+        5:
+            %4 = add(%4: u256, 1: u256, ) 
+            br(bb 1, ) 
+    }
 
+}
+
+"#;
+    assert_eq!(expected, w);
+}
+
+#[test]
+fn continue_stmt_test() {
+    let expr = yul::ObjectParser::new()
+        .parse(
+            r#"
+        object "Token" {
+            code {
+                let x := 0
+                for { let i := 0 } lt(i, 0x100) { i := add(i, 0x1) } {
+                    if gt(x, 0x100) { continue }
+                    x := add(x, i)
+                }
+            }
+        }
+        "#,
+        )
+        .unwrap();
+    let mut context = Yul2IRContext::new_with_object(expr);
+    context.transform().unwrap();
+    let mut p = IRPrinter::new(&context.ir_context);
+    let mut w = String::new();
+    p.print_modules(&mut w).unwrap();
+    let expected = r#"module_name = "Token"
+contract Token {
+    state {
+    }
+    pub fn Token.Token.init()  {
+        0:
+            let %0: [u8] 
+            let %1: [u8] 
+            let %2: [u8] 
+            let %3: u256 = 0: u256
+            let %4: u256 = 0: u256
+            br(bb 1, ) 
+        1:
+            br_if(lt(%4: u256, 256: u256, ) , bb 2, bb 3, ) 
+        2:
+            br_if(gt(%3: u256, 256: u256, ) , bb 4, bb 5, ) 
+        3:
+            ret() 
+        4:
+            br(bb 1, ) 
+        5:
+            %3 = add(%3: u256, %4: u256, ) 
+            %4 = add(%4: u256, 1: u256, ) 
+            br(bb 1, ) 
+    }
+
+}
+
+"#;
+    assert_eq!(expected, w);
+}
