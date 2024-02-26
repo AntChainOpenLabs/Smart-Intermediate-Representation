@@ -1,7 +1,9 @@
 [package]
 name = "smart_ir"
-version = "0.1.0"
+version = "0.0.2"
 edition = "2021"
+description = "Smart Intermediate Representation Compiler Framework"
+license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
