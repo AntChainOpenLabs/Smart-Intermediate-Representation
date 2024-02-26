@@ -36,7 +36,7 @@ typedef enum IRRuntimeType {
     IR_RUNTIME_TYPE_I256 = 17,
 } IRRuntimeType;
 
-#define IRRuntimeIntegerTypeMaxEnum IR_RUNTIME_TYPE_I256
+#define DefaultIRRuntimeIntegerTypeMaxEnum IR_RUNTIME_TYPE_I128
 
 inline bool
 __attribute__((artificial)) __attribute__((always_inline)) 

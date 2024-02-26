@@ -122,7 +122,8 @@ struct qhashtbl_obj_s {
     qhashtbl_obj_t *next; /*!< for chaining next collision object */
 };
 
-#define TABLE_KEY_IS_INT(tbl) ((tbl)->key_runtime_ty <= IRRuntimeIntegerTypeMaxEnum)
+#define TABLE_KEY_IS_BIG_INT(tbl) ((tbl)->key_runtime_ty == IR_RUNTIME_TYPE_U256 || (tbl)->key_runtime_ty == IR_RUNTIME_TYPE_I256)
+#define TABLE_KEY_IS_INT(tbl) (((tbl)->key_runtime_ty <= DefaultIRRuntimeIntegerTypeMaxEnum) ||  (TABLE_KEY_IS_BIG_INT(tbl)))
 
 #ifdef __cplusplus
 }

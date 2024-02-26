@@ -17,8 +17,7 @@ The Smart Intermediate Representation(short for IR) project is a new compiler fr
   - [Installation](#installation)
   - [Quick Start](#quick-start)
     - [Example](#example)
-    - [Build the Docker Image for the Command Line Tool](#build-the-docker-image-for-the-command-line-tool)
-    - [Build a Test IR Program](#build-a-test-ir-program)
+    - [Fetch the Docker Image and Build a Test IR Program](#fetch-the-docker-image-and-build-a-test-ir-program)
   - [Documentation](#documentation)
   - [Roadmap](#roadmap)
     - [V0.1](#v01)
@@ -101,7 +100,7 @@ The IR is still under development. Contributions are always welcome. Please foll
 
 ## Community
 
-![wechat group](./assets/wx.JPG)
+![wechat group](./assets/wx.png)
 
 ![dingtalk group](./assets/dingtalk.png)
 
