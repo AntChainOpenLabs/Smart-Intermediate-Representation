@@ -2,6 +2,8 @@
 name = "smart_ir_macro"
 version = "0.3.0"
 edition = "2021"
+description = "Smart Intermediate Representation Compiler Framework Macro"
+license = "Apache-2.0"
 
 [lib]
 proc-macro = true
