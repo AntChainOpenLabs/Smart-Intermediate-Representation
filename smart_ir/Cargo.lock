@@ -833,9 +833,8 @@ dependencies = [
 
 [[package]]
 name = "inkwell"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b597a7b2cdf279aeef6d7149071e35e4bc87c2cf05a5b7f2d731300bffe587ea"
+version = "0.2.0"
+source = "git+https://github.com/TheDan64/inkwell?rev=4f18389938292f6db34b0be6646452e034bb6ec2#4f18389938292f6db34b0be6646452e034bb6ec2"
 dependencies = [
  "either",
  "inkwell_internals",
@@ -847,9 +846,8 @@ dependencies = [
 
 [[package]]
 name = "inkwell_internals"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fa4d8d74483041a882adaa9a29f633253a66dde85055f0495c121620ac484b2"
+version = "0.8.0"
+source = "git+https://github.com/TheDan64/inkwell?rev=4f18389938292f6db34b0be6646452e034bb6ec2#4f18389938292f6db34b0be6646452e034bb6ec2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1918,8 +1916,6 @@ dependencies = [
 [[package]]
 name = "smart_ir_macro"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e00e1482a0c5f1d12f49efaf59a2023ff3435330cb9329727dee58a7c32cd760"
 dependencies = [
  "proc-macro2",
  "quote",
