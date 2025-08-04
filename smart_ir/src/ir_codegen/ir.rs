@@ -437,7 +437,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                                             .unwrap();
                                     } else {
                                         return Err(CodeGenError {
-                                            message: "wrong type defination".to_string(),
+                                            message: "wrong type definition".to_string(),
                                         });
                                     }
                                 } else {
@@ -446,14 +446,14 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                             } else {
                                 return Err(CodeGenError {
                                 message:
-                                    "try to get field from a pointer whose elemet isn't a struct"
+                                    "try to get field from a pointer whose element isn't a struct"
                                         .to_string(),
                             });
                             }
                         } else {
                             return Err(CodeGenError {
                                 message:
-                                    "try to get field from a pointer whose elemet isn't a pointer"
+                                    "try to get field from a pointer whose element isn't a pointer"
                                         .to_string(),
                             });
                         }
@@ -504,7 +504,7 @@ impl<'ctx> IR2LLVMCodeGenContext<'ctx> {
                                             .unwrap();
                                     } else {
                                         return Err(CodeGenError {
-                                            message: "wrong type defination".to_string(),
+                                            message: "wrong type definition".to_string(),
                                         });
                                     }
                                 } else {
