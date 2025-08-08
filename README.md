@@ -104,7 +104,7 @@ The IR is still under development. Contributions are always welcome. Please foll
 ![wechat group](./assets/wx.png)
 -->
 
-![dingtalk group](./assets/dingtalk.png)
+<!-- ![dingtalk group](./assets/dingtalk.png) -->
 
 <!--
 * Join us on the [Discord]()
