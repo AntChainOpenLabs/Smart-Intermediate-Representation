@@ -114,8 +114,8 @@ The IR is still under development. Contributions are always welcome. Please foll
 
 [Apache 2.0](./LICENSE)
 
-[release-shield]: https://img.shields.io/github/actions/workflow/status/AntChainOpenLabs/Smart-Intermediate-Representation/release.yml.svg?style=for-the-badge&label=Release
-[release-url]: https://github.com/AntChainOpenLabs/Smart-Intermediate-Representation/releases/tag/v0.0.1-alpha.2
+[release-shield]: https://img.shields.io/github/v/release/AntChainOpenLabs/Smart-Intermediate-Representation?style=for-the-badge
+[release-url]: https://github.com/AntChainOpenLabs/Smart-Intermediate-Representation/releases
 [license-shield]: https://img.shields.io/badge/License-Apache_2.0-green.svg?style=for-the-badge
 [license-url]: ./LICENSE
 [issues-shield]: https://img.shields.io/github/issues/AntChainOpenLabs/Smart-Intermediate-Representation.svg?style=for-the-badge
