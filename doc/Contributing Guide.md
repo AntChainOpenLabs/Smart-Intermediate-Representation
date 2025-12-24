@@ -77,7 +77,7 @@ A good principle: "Work together, share ideas, teach others."
 
 ### Sign the CLA
 
-Since the first time you push a PR request as a contributor, you will be asked to sign a CLA (Contributor License Agreement), please following the instruction to comment in such PR.
+Since the first time you push a PR request as a contributor, you will be asked to sign a CLA (Contributor License Agreement), please follow the instruction to comment in such PR.
 
 ### Important Note
 

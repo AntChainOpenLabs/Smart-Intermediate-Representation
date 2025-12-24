@@ -2,7 +2,7 @@
 
 [![Release][release-shield]][release-url] [![Issues][issues-shield]][issues-url] [![PR][pr-shield]][pr-url] [![Apache License][license-shield]][license-url]
 
-The Smart Intermediate Representation(short for IR) project is a new compiler framework intended for smart contract development, which is mainly inspired by LLVM, MLIR and Solidity/Yul. The compiler's goals are:
+The Smart Intermediate Representation (short for IR) project is a new compiler framework intended for smart contract development, which is mainly inspired by LLVM, MLIR and Solidity/Yul. The compiler's goals are:
 
 * Trust and Security
 * Rollup Friendly
